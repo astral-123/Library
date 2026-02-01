@@ -7,6 +7,7 @@
 local library = (function()
     local UserInputService = game:GetService("UserInputService")
     local TweenService = game:GetService("TweenService")
+    local StarterGui = game:GetService("StarterGui")
 
     local Colors = {
         White = Color3.fromRGB(255, 255, 255),
@@ -79,7 +80,6 @@ local library = (function()
         CreateInstance("UICorner", closeBtn,{CornerRadius=UDim.new(0,4)})
 
         local isVisible = true
-
         local function toggleVisibility()
             isVisible = not isVisible
             mainFrame.Visible = isVisible
@@ -87,7 +87,7 @@ local library = (function()
 
         minimizeBtn.MouseButton1Click:Connect(function()
             toggleVisibility()
-            game:GetService("StarterGui"):SetCore("SendNotification",{
+            StarterGui:SetCore("SendNotification",{
                 Title = "Eclipse Hub",
                 Text = "Press LeftAlt to toggle GUI",
                 Duration = 3
@@ -131,7 +131,6 @@ local library = (function()
         end
 
         function window:CreateTab(name)
-            -- Tab Button
             local btn = CreateInstance("TextButton", tabFrame, {
                 Text=name,
                 Size=UDim2.new(1,0,0,40),
@@ -143,7 +142,6 @@ local library = (function()
             })
             CreateInstance("UICorner", btn,{CornerRadius=UDim.new(0,5)})
 
-            -- Content Frame
             local tabContent = CreateInstance("Frame", contentFrame, {
                 Size=UDim2.new(1,0,1,0),
                 BackgroundTransparency=1,
@@ -162,6 +160,7 @@ local library = (function()
 
             local tab = {}
 
+            -- Button
             function tab:CreateButton(text,callback)
                 local b = CreateInstance("TextButton", tabContent, {
                     Text=text,
@@ -179,6 +178,7 @@ local library = (function()
                 return b
             end
 
+            -- Toggle
             function tab:CreateToggle(text,default,callback)
                 default = default or false
                 local togg = default
@@ -218,6 +218,47 @@ local library = (function()
                 return frame
             end
 
+            -- Checkbox
+            function tab:CreateCheckbox(text,default,callback)
+                default = default or false
+                local checked = default
+
+                local frame = CreateInstance("Frame", tabContent,{
+                    Size=UDim2.new(1,0,0,35),
+                    BackgroundColor3=Colors.Gray
+                })
+                CreateInstance("UICorner", frame,{CornerRadius=UDim.new(0,4)})
+
+                local label = CreateInstance("TextLabel", frame,{
+                    Text=" "..text,
+                    Size=UDim2.new(0.7,0,1,0),
+                    BackgroundTransparency=1,
+                    TextColor3=Colors.White,
+                    Font=Font,
+                    TextSize=14,
+                    TextXAlignment=Enum.TextXAlignment.Left
+                })
+
+                local box = CreateInstance("TextButton", frame,{
+                    Text = checked and "✔" or "",
+                    Size=UDim2.new(0.3,0,1,0),
+                    BackgroundColor3=Colors.Cyan,
+                    TextColor3=Colors.White,
+                    Font=Font,
+                    TextSize=18,
+                    AutoButtonColor=false
+                })
+
+                box.MouseButton1Click:Connect(function()
+                    checked = not checked
+                    box.Text = checked and "✔" or ""
+                    if callback then callback(checked) end
+                end)
+
+                return frame
+            end
+
+            -- Label
             function tab:CreateLabel(text)
                 return CreateInstance("TextLabel", tabContent,{
                     Text=text,
@@ -230,17 +271,18 @@ local library = (function()
                 })
             end
 
+            -- Slider
             function tab:CreateSlider(text,min,max,default,callback)
                 local value = default or min
 
                 local frame = CreateInstance("Frame", tabContent,{
                     Size=UDim2.new(1,0,0,35),
-                    BackgroundColor3=Colors.Gray,
+                    BackgroundColor3=Colors.Gray
                 })
                 CreateInstance("UICorner", frame,{CornerRadius=UDim.new(0,4)})
 
                 local label = CreateInstance("TextLabel", frame,{
-                    Text=text.." : "..tostring(value),
+                    Text=text.." : "..value,
                     Size=UDim2.new(0.8,0,1,0),
                     TextColor3=Colors.White,
                     BackgroundTransparency=1,
@@ -249,19 +291,19 @@ local library = (function()
                     TextXAlignment=Enum.TextXAlignment.Left
                 })
 
-                local slider = CreateInstance("Frame", frame,{
+                local sliderBar = CreateInstance("Frame", frame,{
                     Size=UDim2.new(0.8,0,0,4),
                     Position=UDim2.new(0,10,0.5,-2),
                     BackgroundColor3=Colors.Cyan
                 })
 
                 local dragging = false
-                slider.InputBegan:Connect(function(input)
+                sliderBar.InputBegan:Connect(function(input)
                     if input.UserInputType == Enum.UserInputType.MouseButton1 then
                         dragging = true
                     end
                 end)
-                slider.InputEnded:Connect(function(input)
+                sliderBar.InputEnded:Connect(function(input)
                     if input.UserInputType == Enum.UserInputType.MouseButton1 then
                         dragging = false
                     end
