@@ -1,190 +1,93 @@
---[[ 
-    Eclipse Hub
-    Interface : Trix#2794
-    Script : Toi
---]]
+-- EclipseHub.lua
+local EclipseHub = {}
+EclipseHub.__index = EclipseHub
 
-local library = (function()
-    local UserInputService = game:GetService("UserInputService")
-    local TweenService = game:GetService("TweenService")
+function EclipseHub.new()
+    local self = setmetatable({}, EclipseHub)
 
-    local Colors = {
-        White = Color3.fromRGB(255, 255, 255),
-        Gray = Color3.fromRGB(40,40,40),
-        Cyan = Color3.fromRGB(0, 255, 255),
-        Dark = Color3.fromRGB(30,30,30),
-    }
+    -- ScreenGui
+    self.MainUI = Instance.new("ScreenGui")
+    self.MainUI.Name = "MainUI"
+    self.MainUI.Parent = game.Players.LocalPlayer:WaitForChild("PlayerGui")
+    self.MainUI.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 
-    local Font = Enum.Font.GothamBold
+    -- Fenêtre
+    self.Window = Instance.new("Frame")
+    self.Window.Name = "Window"
+    self.Window.Parent = self.MainUI
+    self.Window.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+    self.Window.BorderSizePixel = 0
+    self.Window.Position = UDim2.new(0.3, 0, 0.28, 0)
+    self.Window.Size = UDim2.new(0, 576, 0, 338)
 
-    local function CreateInstance(class,parent,props)
-        local inst = Instance.new(class,parent)
-        if props then
-            for i,v in pairs(props) do inst[i]=v end
+    -- Titre
+    local Title = Instance.new("TextLabel")
+    Title.Parent = self.Window
+    Title.Size = UDim2.new(0, 95, 0, 31)
+    Title.Font = Enum.Font.SourceSansBold
+    Title.Text = "Eclipse Hub"
+    Title.TextColor3 = Color3.fromRGB(255, 255, 255)
+    Title.TextSize = 18
+    local UICorner = Instance.new("UICorner")
+    UICorner.Parent = Title
+
+    -- Frame principale
+    self.FrameUi = Instance.new("Frame")
+    self.FrameUi.Name = "FrameUi"
+    self.FrameUi.Parent = self.Window
+    self.FrameUi.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+    self.FrameUi.BorderSizePixel = 0
+    self.FrameUi.Position = UDim2.new(0, 0, 0.094, 0)
+    self.FrameUi.Size = UDim2.new(0, 576, 0, 306)
+
+    return self
+end
+
+-- Ajouter un onglet
+function EclipseHub:AddTab(tabName)
+    local Tab = Instance.new("Frame")
+    Tab.Name = tabName
+    Tab.Parent = self.FrameUi
+    Tab.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+    Tab.BorderSizePixel = 0
+    Tab.Size = UDim2.new(0, 130, 0, 306)
+
+    local UIListLayout = Instance.new("UIListLayout")
+    UIListLayout.Parent = Tab
+    UIListLayout.SortOrder = Enum.SortOrder.LayoutOrder
+
+    local Button = Instance.new("TextButton")
+    Button.Parent = Tab
+    Button.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+    Button.Size = UDim2.new(1, 0, 0, 50)
+    Button.Font = Enum.Font.SourceSansBold
+    Button.Text = tabName
+    Button.TextColor3 = Color3.fromRGB(255, 255, 255)
+    Button.TextSize = 18
+    local UICorner = Instance.new("UICorner")
+    UICorner.Parent = Button
+
+    return Tab
+end
+
+-- Ajouter un bouton
+function EclipseHub:AddButton(tab, buttonName, callback)
+    local Button = Instance.new("TextButton")
+    Button.Parent = tab
+    Button.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+    Button.Size = UDim2.new(1, 0, 0, 38)
+    Button.Font = Enum.Font.SourceSansBold
+    Button.Text = buttonName
+    Button.TextColor3 = Color3.fromRGB(255, 255, 255)
+    Button.TextSize = 16
+    local UICorner = Instance.new("UICorner")
+    UICorner.Parent = Button
+
+    Button.MouseButton1Click:Connect(function()
+        if callback then
+            callback()
         end
-        return inst
-    end
+    end)
+end
 
-    local library = {}
-
-    function library:CreateWindow(title)
-        title = title or "Eclipse Hub"
-        local window = {}
-
-        -- ScreenGui
-        local screen = CreateInstance("ScreenGui", game.CoreGui, {Name="EclipseHub"})
-        
-        -- Main Frame
-        local mainFrame = CreateInstance("Frame", screen, {
-            Size=UDim2.new(0,600,0,400),
-            Position=UDim2.new(0.3,0,0.2,0),
-            BackgroundColor3 = Colors.Dark,
-        })
-        CreateInstance("UICorner", mainFrame,{CornerRadius=UDim.new(0,8)})
-
-        -- Title
-        local titleLabel = CreateInstance("TextLabel", mainFrame, {
-            Text = title,
-            TextColor3 = Colors.White,
-            Font = Font,
-            TextSize = 20,
-            BackgroundTransparency = 1,
-            Size = UDim2.new(1,0,0,40),
-        })
-
-        -- Tabs frame
-        local tabFrame = CreateInstance("Frame", mainFrame, {
-            Size = UDim2.new(0,150,1,0),
-            BackgroundColor3 = Colors.Gray,
-        })
-        CreateInstance("UICorner", tabFrame,{CornerRadius=UDim.new(0,5)})
-
-        local tabLayout = CreateInstance("UIListLayout", tabFrame,{SortOrder=Enum.SortOrder.LayoutOrder, Padding=UDim.new(0,5)})
-
-        -- Content frame
-        local contentFrame = CreateInstance("Frame", mainFrame, {
-            Position=UDim2.new(0,150,0,0),
-            Size=UDim2.new(1,-150,1,0),
-            BackgroundColor3 = Colors.Dark,
-        })
-        CreateInstance("UIListLayout", contentFrame,{SortOrder=Enum.SortOrder.LayoutOrder, Padding=UDim.new(0,5)})
-
-        local tabs = {}
-        local currentTab = nil
-
-        local function switchTab(tabName)
-            for name, frame in pairs(tabs) do
-                frame.Visible = (name==tabName)
-            end
-        end
-
-        function window:CreateTab(name)
-            -- Tab Button
-            local btn = CreateInstance("TextButton", tabFrame, {
-                Text=name,
-                Size=UDim2.new(1,0,0,40),
-                TextColor3 = Colors.White,
-                Font = Font,
-                TextSize=16,
-                BackgroundColor3=Colors.Gray,
-                AutoButtonColor=false
-            })
-            CreateInstance("UICorner", btn,{CornerRadius=UDim.new(0,5)})
-
-            -- Content Frame
-            local tabContent = CreateInstance("Frame", contentFrame, {
-                Size=UDim2.new(1,0,1,0),
-                BackgroundTransparency=1,
-                Visible=false
-            })
-            tabs[name] = tabContent
-
-            btn.MouseButton1Click:Connect(function() 
-                switchTab(name)
-            end)
-
-            if not currentTab then
-                currentTab = name
-                switchTab(name)
-            end
-
-            local tab = {}
-
-            function tab:CreateButton(text,callback)
-                local b = CreateInstance("TextButton", tabContent, {
-                    Text=text,
-                    Size=UDim2.new(1,0,0,35),
-                    BackgroundColor3 = Colors.Gray,
-                    Font=Font,
-                    TextColor3=Colors.White,
-                    TextSize=14,
-                    AutoButtonColor=false
-                })
-                CreateInstance("UICorner", b,{CornerRadius=UDim.new(0,4)})
-                if callback then
-                    b.MouseButton1Click:Connect(callback)
-                end
-                return b
-            end
-
-            function tab:CreateToggle(text,default,callback)
-                default = default or false
-                local togg = default
-
-                local frame = CreateInstance("Frame", tabContent, {
-                    Size=UDim2.new(1,0,0,35),
-                    BackgroundColor3 = Colors.Gray,
-                })
-                CreateInstance("UICorner", frame,{CornerRadius=UDim.new(0,4)})
-
-                local label = CreateInstance("TextLabel", frame,{
-                    Text=" "..text,
-                    Size=UDim2.new(0.8,0,1,0),
-                    TextColor3=Colors.White,
-                    BackgroundTransparency=1,
-                    Font=Font,
-                    TextSize=14,
-                    TextXAlignment=Enum.TextXAlignment.Left
-                })
-
-                local button = CreateInstance("TextButton", frame,{
-                    Text= togg and "ON" or "OFF",
-                    Size=UDim2.new(0.2,0,1,0),
-                    BackgroundColor3 = Colors.Cyan,
-                    TextColor3 = Colors.White,
-                    Font=Font,
-                    TextSize=14,
-                    AutoButtonColor=false
-                })
-
-                button.MouseButton1Click:Connect(function()
-                    togg = not togg
-                    button.Text = togg and "ON" or "OFF"
-                    if callback then callback(togg) end
-                end)
-
-                return frame
-            end
-
-            function tab:CreateLabel(text)
-                return CreateInstance("TextLabel", tabContent,{
-                    Text=text,
-                    Size=UDim2.new(1,0,0,35),
-                    BackgroundTransparency=1,
-                    TextColor3=Colors.White,
-                    Font=Font,
-                    TextSize=14,
-                    TextXAlignment=Enum.TextXAlignment.Left
-                })
-            end
-
-            return tab
-        end
-
-        return window
-    end
-
-    return library
-end)()
-
-return library
+return EclipseHub
