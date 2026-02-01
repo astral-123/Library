@@ -1,93 +1,96 @@
--- EclipseHub.lua
-local EclipseHub = {}
-EclipseHub.__index = EclipseHub
+local Library = {}
+Library.__index = Library
 
-function EclipseHub.new()
-    local self = setmetatable({}, EclipseHub)
+-- SERVICES
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+local PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
 
-    -- ScreenGui
-    self.MainUI = Instance.new("ScreenGui")
-    self.MainUI.Name = "MainUI"
-    self.MainUI.Parent = game.Players.LocalPlayer:WaitForChild("PlayerGui")
-    self.MainUI.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+-- CREATE WINDOW
+function Library:CreateWindow(title)
+    local ScreenGui = Instance.new("ScreenGui", PlayerGui)
+    ScreenGui.Name = "CustomUILib"
 
-    -- Fenêtre
-    self.Window = Instance.new("Frame")
-    self.Window.Name = "Window"
-    self.Window.Parent = self.MainUI
-    self.Window.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
-    self.Window.BorderSizePixel = 0
-    self.Window.Position = UDim2.new(0.3, 0, 0.28, 0)
-    self.Window.Size = UDim2.new(0, 576, 0, 338)
+    local Main = Instance.new("Frame", ScreenGui)
+    Main.Size = UDim2.fromScale(0.4, 0.5)
+    Main.Position = UDim2.fromScale(0.3, 0.25)
+    Main.BackgroundColor3 = Color3.fromRGB(25,25,25)
+    Main.BorderSizePixel = 0
 
-    -- Titre
-    local Title = Instance.new("TextLabel")
-    Title.Parent = self.Window
-    Title.Size = UDim2.new(0, 95, 0, 31)
-    Title.Font = Enum.Font.SourceSansBold
-    Title.Text = "Eclipse Hub"
-    Title.TextColor3 = Color3.fromRGB(255, 255, 255)
+    local Title = Instance.new("TextLabel", Main)
+    Title.Size = UDim2.fromScale(1, 0.1)
+    Title.Text = title
+    Title.TextColor3 = Color3.new(1,1,1)
+    Title.BackgroundTransparency = 1
+    Title.Font = Enum.Font.GothamBold
     Title.TextSize = 18
-    local UICorner = Instance.new("UICorner")
-    UICorner.Parent = Title
 
-    -- Frame principale
-    self.FrameUi = Instance.new("Frame")
-    self.FrameUi.Name = "FrameUi"
-    self.FrameUi.Parent = self.Window
-    self.FrameUi.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
-    self.FrameUi.BorderSizePixel = 0
-    self.FrameUi.Position = UDim2.new(0, 0, 0.094, 0)
-    self.FrameUi.Size = UDim2.new(0, 576, 0, 306)
+    local TabsFrame = Instance.new("Frame", Main)
+    TabsFrame.Position = UDim2.fromScale(0, 0.1)
+    TabsFrame.Size = UDim2.fromScale(1, 0.9)
+    TabsFrame.BackgroundTransparency = 1
 
-    return self
-end
+    local Window = {}
+    Window.TabsFrame = TabsFrame
 
--- Ajouter un onglet
-function EclipseHub:AddTab(tabName)
-    local Tab = Instance.new("Frame")
-    Tab.Name = tabName
-    Tab.Parent = self.FrameUi
-    Tab.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
-    Tab.BorderSizePixel = 0
-    Tab.Size = UDim2.new(0, 130, 0, 306)
+    function Window:CreateTab(name)
+        local Tab = Instance.new("Frame", TabsFrame)
+        Tab.Size = UDim2.fromScale(1,1)
+        Tab.Visible = true
+        Tab.BackgroundTransparency = 1
 
-    local UIListLayout = Instance.new("UIListLayout")
-    UIListLayout.Parent = Tab
-    UIListLayout.SortOrder = Enum.SortOrder.LayoutOrder
+        local UIList = Instance.new("UIListLayout", Tab)
+        UIList.Padding = UDim.new(0,6)
 
-    local Button = Instance.new("TextButton")
-    Button.Parent = Tab
-    Button.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
-    Button.Size = UDim2.new(1, 0, 0, 50)
-    Button.Font = Enum.Font.SourceSansBold
-    Button.Text = tabName
-    Button.TextColor3 = Color3.fromRGB(255, 255, 255)
-    Button.TextSize = 18
-    local UICorner = Instance.new("UICorner")
-    UICorner.Parent = Button
+        local TabFunctions = {}
 
-    return Tab
-end
+        -- BUTTON
+        function TabFunctions:AddButton(text, callback)
+            local Btn = Instance.new("TextButton", Tab)
+            Btn.Size = UDim2.fromScale(1, 0.1)
+            Btn.Text = text
+            Btn.BackgroundColor3 = Color3.fromRGB(40,40,40)
+            Btn.TextColor3 = Color3.new(1,1,1)
+            Btn.Font = Enum.Font.Gotham
+            Btn.TextSize = 14
 
--- Ajouter un bouton
-function EclipseHub:AddButton(tab, buttonName, callback)
-    local Button = Instance.new("TextButton")
-    Button.Parent = tab
-    Button.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
-    Button.Size = UDim2.new(1, 0, 0, 38)
-    Button.Font = Enum.Font.SourceSansBold
-    Button.Text = buttonName
-    Button.TextColor3 = Color3.fromRGB(255, 255, 255)
-    Button.TextSize = 16
-    local UICorner = Instance.new("UICorner")
-    UICorner.Parent = Button
-
-    Button.MouseButton1Click:Connect(function()
-        if callback then
-            callback()
+            Btn.MouseButton1Click:Connect(function()
+                pcall(callback)
+            end)
         end
-    end)
+
+        -- TOGGLE
+        function TabFunctions:AddToggle(text, default, callback)
+            local Toggle = Instance.new("TextButton", Tab)
+            Toggle.Size = UDim2.fromScale(1, 0.1)
+            Toggle.Text = text .. " : OFF"
+            Toggle.BackgroundColor3 = Color3.fromRGB(40,40,40)
+            Toggle.TextColor3 = Color3.new(1,1,1)
+
+            local State = default or false
+            Toggle.Text = text .. (State and " : ON" or " : OFF")
+
+            Toggle.MouseButton1Click:Connect(function()
+                State = not State
+                Toggle.Text = text .. (State and " : ON" or " : OFF")
+                pcall(callback, State)
+            end)
+        end
+
+        -- LABEL
+        function TabFunctions:AddLabel(text)
+            local Label = Instance.new("TextLabel", Tab)
+            Label.Size = UDim2.fromScale(1, 0.08)
+            Label.Text = text
+            Label.TextColor3 = Color3.new(1,1,1)
+            Label.BackgroundTransparency = 1
+            Label.TextSize = 14
+        end
+
+        return TabFunctions
+    end
+
+    return Window
 end
 
-return EclipseHub
+return setmetatable({}, Library)
