@@ -1,93 +1,105 @@
+-- Simple UI Library (Executor Ready)
+
 local Library = {}
 Library.__index = Library
 
--- SERVICES
 local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
 local PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
 
+-- =====================
 -- CREATE WINDOW
+-- =====================
 function Library:CreateWindow(title)
-    local ScreenGui = Instance.new("ScreenGui", PlayerGui)
-    ScreenGui.Name = "CustomUILib"
+    local ScreenGui = Instance.new("ScreenGui")
+    ScreenGui.Name = "UILibrary"
+    ScreenGui.ResetOnSpawn = false
+    ScreenGui.Parent = PlayerGui
 
-    local Main = Instance.new("Frame", ScreenGui)
-    Main.Size = UDim2.fromScale(0.4, 0.5)
-    Main.Position = UDim2.fromScale(0.3, 0.25)
+    local Main = Instance.new("Frame")
+    Main.Parent = ScreenGui
+    Main.Size = UDim2.new(0, 500, 0, 350)
+    Main.Position = UDim2.new(0.5, -250, 0.5, -175)
     Main.BackgroundColor3 = Color3.fromRGB(25,25,25)
     Main.BorderSizePixel = 0
 
-    local Title = Instance.new("TextLabel", Main)
-    Title.Size = UDim2.fromScale(1, 0.1)
+    local Title = Instance.new("TextLabel")
+    Title.Parent = Main
+    Title.Size = UDim2.new(1, 0, 0, 40)
     Title.Text = title
     Title.TextColor3 = Color3.new(1,1,1)
     Title.BackgroundTransparency = 1
     Title.Font = Enum.Font.GothamBold
     Title.TextSize = 18
 
-    local TabsFrame = Instance.new("Frame", Main)
-    TabsFrame.Position = UDim2.fromScale(0, 0.1)
-    TabsFrame.Size = UDim2.fromScale(1, 0.9)
-    TabsFrame.BackgroundTransparency = 1
+    local Container = Instance.new("Frame")
+    Container.Parent = Main
+    Container.Position = UDim2.new(0, 0, 0, 40)
+    Container.Size = UDim2.new(1, 0, 1, -40)
+    Container.BackgroundTransparency = 1
+
+    local Layout = Instance.new("UIListLayout", Container)
+    Layout.Padding = UDim.new(0, 6)
 
     local Window = {}
-    Window.TabsFrame = TabsFrame
 
+    -- =====================
+    -- CREATE TAB
+    -- =====================
     function Window:CreateTab(name)
-        local Tab = Instance.new("Frame", TabsFrame)
-        Tab.Size = UDim2.fromScale(1,1)
-        Tab.Visible = true
-        Tab.BackgroundTransparency = 1
+        local Tab = {}
 
-        local UIList = Instance.new("UIListLayout", Tab)
-        UIList.Padding = UDim.new(0,6)
-
-        local TabFunctions = {}
+        local Label = Instance.new("TextLabel")
+        Label.Parent = Container
+        Label.Text = name
+        Label.TextColor3 = Color3.fromRGB(180,180,180)
+        Label.BackgroundTransparency = 1
+        Label.Font = Enum.Font.Gotham
+        Label.TextSize = 14
+        Label.Size = UDim2.new(1,0,0,25)
 
         -- BUTTON
-        function TabFunctions:AddButton(text, callback)
-            local Btn = Instance.new("TextButton", Tab)
-            Btn.Size = UDim2.fromScale(1, 0.1)
-            Btn.Text = text
-            Btn.BackgroundColor3 = Color3.fromRGB(40,40,40)
-            Btn.TextColor3 = Color3.new(1,1,1)
-            Btn.Font = Enum.Font.Gotham
-            Btn.TextSize = 14
+        function Tab:AddButton(text, callback)
+            local Button = Instance.new("TextButton")
+            Button.Parent = Container
+            Button.Size = UDim2.new(1, -10, 0, 30)
+            Button.Text = text
+            Button.BackgroundColor3 = Color3.fromRGB(40,40,40)
+            Button.TextColor3 = Color3.new(1,1,1)
+            Button.Font = Enum.Font.Gotham
+            Button.TextSize = 14
 
-            Btn.MouseButton1Click:Connect(function()
+            Button.MouseButton1Click:Connect(function()
                 pcall(callback)
             end)
         end
 
         -- TOGGLE
-        function TabFunctions:AddToggle(text, default, callback)
-            local Toggle = Instance.new("TextButton", Tab)
-            Toggle.Size = UDim2.fromScale(1, 0.1)
-            Toggle.Text = text .. " : OFF"
+        function Tab:AddToggle(text, default, callback)
+            local State = default or false
+
+            local Toggle = Instance.new("TextButton")
+            Toggle.Parent = Container
+            Toggle.Size = UDim2.new(1, -10, 0, 30)
             Toggle.BackgroundColor3 = Color3.fromRGB(40,40,40)
             Toggle.TextColor3 = Color3.new(1,1,1)
+            Toggle.Font = Enum.Font.Gotham
+            Toggle.TextSize = 14
 
-            local State = default or false
-            Toggle.Text = text .. (State and " : ON" or " : OFF")
+            local function Refresh()
+                Toggle.Text = text .. " : " .. (State and "ON" or "OFF")
+            end
+
+            Refresh()
 
             Toggle.MouseButton1Click:Connect(function()
                 State = not State
-                Toggle.Text = text .. (State and " : ON" or " : OFF")
+                Refresh()
                 pcall(callback, State)
             end)
         end
 
-        -- LABEL
-        function TabFunctions:AddLabel(text)
-            local Label = Instance.new("TextLabel", Tab)
-            Label.Size = UDim2.fromScale(1, 0.08)
-            Label.Text = text
-            Label.TextColor3 = Color3.new(1,1,1)
-            Label.BackgroundTransparency = 1
-            Label.TextSize = 14
-        end
-
-        return TabFunctions
+        return Tab
     end
 
     return Window
