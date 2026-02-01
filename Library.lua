@@ -6,7 +6,6 @@
 
 local library = (function()
     local UserInputService = game:GetService("UserInputService")
-    local TweenService = game:GetService("TweenService")
     local StarterGui = game:GetService("StarterGui")
 
     local Colors = {
@@ -35,7 +34,7 @@ local library = (function()
 
         -- ScreenGui
         local screen = CreateInstance("ScreenGui", game.CoreGui, {Name="EclipseHub"})
-        
+
         -- Main Frame
         local mainFrame = CreateInstance("Frame", screen, {
             Size=UDim2.new(0,600,0,400),
@@ -111,15 +110,14 @@ local library = (function()
         })
         CreateInstance("UICorner", tabFrame,{CornerRadius=UDim.new(0,5)})
 
-        local tabLayout = CreateInstance("UIListLayout", tabFrame,{SortOrder=Enum.SortOrder.LayoutOrder, Padding=UDim.new(0,5)})
+        CreateInstance("UIListLayout", tabFrame,{SortOrder=Enum.SortOrder.LayoutOrder, Padding=UDim.new(0,5)})
 
-        -- Content frame
+        -- Content frame (container for tabs)
         local contentFrame = CreateInstance("Frame", mainFrame, {
             Position=UDim2.new(0,150,0,0),
             Size=UDim2.new(1,-150,1,0),
             BackgroundColor3 = Colors.Dark,
         })
-        CreateInstance("UIListLayout", contentFrame,{SortOrder=Enum.SortOrder.LayoutOrder, Padding=UDim.new(0,5)})
 
         local tabs = {}
         local currentTab = nil
@@ -147,9 +145,15 @@ local library = (function()
                 BackgroundTransparency=1,
                 Visible=false
             })
+            -- UIListLayout propre à chaque tab
+            CreateInstance("UIListLayout", tabContent,{
+                SortOrder = Enum.SortOrder.LayoutOrder,
+                Padding = UDim.new(0,5)
+            })
+
             tabs[name] = tabContent
 
-            btn.MouseButton1Click:Connect(function() 
+            btn.MouseButton1Click:Connect(function()
                 switchTab(name)
             end)
 
@@ -172,9 +176,7 @@ local library = (function()
                     AutoButtonColor=false
                 })
                 CreateInstance("UICorner", b,{CornerRadius=UDim.new(0,4)})
-                if callback then
-                    b.MouseButton1Click:Connect(callback)
-                end
+                if callback then b.MouseButton1Click:Connect(callback) end
                 return b
             end
 
