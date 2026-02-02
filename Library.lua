@@ -227,101 +227,8 @@ function Library:CreateWindow(config)
     MainUI.Parent = game.CoreGui
     MainUI.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
     MainUI.ResetOnSpawn = false
-    MainUI.Enabled = false -- Désactivé pendant le chargement
     
-    -- Écran de chargement
-    local LoadingScreen = Instance.new("Frame")
-    LoadingScreen.Name = "LoadingScreen"
-    LoadingScreen.Parent = MainUI
-    LoadingScreen.BackgroundColor3 = Colors.MainBackground
-    LoadingScreen.BorderSizePixel = 0
-    LoadingScreen.Size = UDim2.new(1, 0, 1, 0)
-    LoadingScreen.ZIndex = 1000
-    
-    local LoadingCorner = Instance.new("UICorner")
-    LoadingCorner.CornerRadius = UDim.new(0, 0)
-    LoadingCorner.Parent = LoadingScreen
-    
-    local LoadingLogo = Instance.new("ImageLabel")
-    LoadingLogo.Name = "Logo"
-    LoadingLogo.Parent = LoadingScreen
-    LoadingLogo.BackgroundTransparency = 1
-    LoadingLogo.Position = UDim2.new(0.5, 0, 0.35, 0)
-    LoadingLogo.Size = UDim2.new(0, 80, 0, 80)
-    LoadingLogo.AnchorPoint = Vector2.new(0.5, 0.5)
-    LoadingLogo.Image = type(windowConfig.Icon) == "number" and (windowConfig.Icon ~= 0 and "rbxassetid://" .. windowConfig.Icon or "") or windowConfig.Icon
-    LoadingLogo.ImageColor3 = Colors.Accent
-    
-    local LogoCorner = Instance.new("UICorner")
-    LogoCorner.CornerRadius = UDim.new(0, 12)
-    LogoCorner.Parent = LoadingLogo
-    
-    local LoadingTitle = Instance.new("TextLabel")
-    LoadingTitle.Name = "Title"
-    LoadingTitle.Parent = LoadingScreen
-    LoadingTitle.BackgroundTransparency = 1
-    LoadingTitle.Position = UDim2.new(0.5, 0, 0.5, 0)
-    LoadingTitle.Size = UDim2.new(0.6, 0, 0, 40)
-    LoadingTitle.AnchorPoint = Vector2.new(0.5, 0.5)
-    LoadingTitle.Font = Enum.Font.GothamBold
-    LoadingTitle.Text = windowConfig.LoadingTitle
-    LoadingTitle.TextColor3 = Colors.TextPrimary
-    LoadingTitle.TextSize = 24
-    
-    local LoadingSubtitle = Instance.new("TextLabel")
-    LoadingSubtitle.Name = "Subtitle"
-    LoadingSubtitle.Parent = LoadingScreen
-    LoadingSubtitle.BackgroundTransparency = 1
-    LoadingSubtitle.Position = UDim2.new(0.5, 0, 0.56, 0)
-    LoadingSubtitle.Size = UDim2.new(0.6, 0, 0, 30)
-    LoadingSubtitle.AnchorPoint = Vector2.new(0.5, 0.5)
-    LoadingSubtitle.Font = Enum.Font.Gotham
-    LoadingSubtitle.Text = windowConfig.LoadingSubtitle
-    LoadingSubtitle.TextColor3 = Colors.TextSecondary
-    LoadingSubtitle.TextSize = 16
-    LoadingSubtitle.TextTransparency = 0.4
-    
-    -- Barre de progression
-    local ProgressBarBG = Instance.new("Frame")
-    ProgressBarBG.Name = "ProgressBG"
-    ProgressBarBG.Parent = LoadingScreen
-    ProgressBarBG.BackgroundColor3 = Colors.TertiaryBackground
-    ProgressBarBG.BorderSizePixel = 0
-    ProgressBarBG.Position = UDim2.new(0.5, 0, 0.65, 0)
-    ProgressBarBG.Size = UDim2.new(0, 300, 0, 6)
-    ProgressBarBG.AnchorPoint = Vector2.new(0.5, 0.5)
-    
-    local ProgressCorner = Instance.new("UICorner")
-    ProgressCorner.CornerRadius = UDim.new(1, 0)
-    ProgressCorner.Parent = ProgressBarBG
-    
-    local ProgressBar = Instance.new("Frame")
-    ProgressBar.Name = "Progress"
-    ProgressBar.Parent = ProgressBarBG
-    ProgressBar.BackgroundColor3 = Colors.Accent
-    ProgressBar.BorderSizePixel = 0
-    ProgressBar.Size = UDim2.new(0, 0, 1, 0)
-    
-    local ProgressBarCorner = Instance.new("UICorner")
-    ProgressBarCorner.CornerRadius = UDim.new(1, 0)
-    ProgressBarCorner.Parent = ProgressBar
-    
-    CreateGradient(ProgressBar, ColorSequence.new{
-        ColorSequenceKeypoint.new(0, Colors.Accent),
-        ColorSequenceKeypoint.new(1, Colors.AccentDark)
-    }, 45)
-    
-    -- Animation de la barre de progression
-    MainUI.Enabled = true
-    
-    spawn(function()
-        for i = 0, 100, 5 do
-            Tween(ProgressBar, {Size = UDim2.new(i/100, 0, 1, 0)}, 0.05)
-            wait(0.03)
-        end
-    end)
-    
-    -- Conteneur principal - Affichage instantané après chargement
+    -- Conteneur principal - Affichage direct
     local Container = Instance.new("Frame")
     Container.Name = "Container"
     Container.Parent = MainUI
@@ -329,7 +236,6 @@ function Library:CreateWindow(config)
     Container.Position = UDim2.new(0.5, 0, 0.5, 0)
     Container.Size = UDim2.new(0, 620, 0, 460)
     Container.AnchorPoint = Vector2.new(0.5, 0.5)
-    Container.Visible = false -- Caché pendant le chargement
     
     -- Fenêtre principale
     local Window = Instance.new("Frame")
@@ -521,11 +427,6 @@ function Library:CreateWindow(config)
     ContentContainer.Size = UDim2.new(1, -180, 1, -10)
     
     MakeDraggable(Window, TitleBar)
-    
-    -- Terminer le chargement après 2 secondes
-    wait(2)
-    LoadingScreen.Visible = false
-    Container.Visible = true
     
     -- Keybind pour toggle l'UI
     if windowConfig.ToggleUIKeybind then
