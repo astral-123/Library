@@ -389,7 +389,7 @@ function Library:CreateWindow(config)
     Subtitle.Position = UDim2.new(0, 50, 0, 26)
     Subtitle.Size = UDim2.new(0.6, -50, 0, 16)
     Subtitle.Font = Enum.Font.Gotham
-    Subtitle.Text = "v2.0 Premium"
+    Subtitle.Text = "Hub"
     Subtitle.TextColor3 = Colors.TextSecondary
     Subtitle.TextSize = 12
     Subtitle.TextXAlignment = Enum.TextXAlignment.Left
