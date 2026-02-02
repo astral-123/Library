@@ -848,6 +848,658 @@ function Library:CreateWindow(config)
             return ToggleTable
         end
         
+        -- Slider
+        function TabTable:CreateSlider(config)
+            config = config or {}
+            local sliderText = config.Name or config.Text or "Slider"
+            local sliderMin = config.Min or 0
+            local sliderMax = config.Max or 100
+            local sliderDefault = config.Default or sliderMin
+            local sliderCallback = config.Callback or function() end
+            local sliderIncrement = config.Increment or 1
+            
+            local value = sliderDefault
+            local dragging = false
+            
+            local SliderFrame = Instance.new("Frame")
+            SliderFrame.Name = "Slider"
+            SliderFrame.Parent = Content
+            SliderFrame.BackgroundColor3 = Colors.SecondaryBackground
+            SliderFrame.BorderSizePixel = 0
+            SliderFrame.Size = UDim2.new(1, 0, 0, 60)
+            
+            local SliderCorner = Instance.new("UICorner")
+            SliderCorner.CornerRadius = UDim.new(0, 8)
+            SliderCorner.Parent = SliderFrame
+            
+            AddStroke(SliderFrame, Colors.Border, 1)
+            
+            local SliderLabel = Instance.new("TextLabel")
+            SliderLabel.Name = "Label"
+            SliderLabel.Parent = SliderFrame
+            SliderLabel.BackgroundTransparency = 1
+            SliderLabel.Position = UDim2.new(0, 15, 0, 8)
+            SliderLabel.Size = UDim2.new(0.7, 0, 0, 20)
+            SliderLabel.Font = Enum.Font.GothamSemibold
+            SliderLabel.Text = sliderText
+            SliderLabel.TextColor3 = Colors.TextPrimary
+            SliderLabel.TextSize = 14
+            SliderLabel.TextXAlignment = Enum.TextXAlignment.Left
+            
+            local SliderValue = Instance.new("TextLabel")
+            SliderValue.Name = "Value"
+            SliderValue.Parent = SliderFrame
+            SliderValue.BackgroundColor3 = Colors.TertiaryBackground
+            SliderValue.BorderSizePixel = 0
+            SliderValue.Position = UDim2.new(1, -60, 0, 6)
+            SliderValue.Size = UDim2.new(0, 45, 0, 24)
+            SliderValue.Font = Enum.Font.GothamBold
+            SliderValue.Text = tostring(value)
+            SliderValue.TextColor3 = Colors.Accent
+            SliderValue.TextSize = 13
+            
+            local ValueCorner = Instance.new("UICorner")
+            ValueCorner.CornerRadius = UDim.new(0, 6)
+            ValueCorner.Parent = SliderValue
+            
+            AddStroke(SliderValue, Colors.Border, 1)
+            
+            local SliderBar = Instance.new("Frame")
+            SliderBar.Name = "Bar"
+            SliderBar.Parent = SliderFrame
+            SliderBar.BackgroundColor3 = Colors.TertiaryBackground
+            SliderBar.BorderSizePixel = 0
+            SliderBar.Position = UDim2.new(0, 15, 1, -20)
+            SliderBar.Size = UDim2.new(1, -30, 0, 6)
+            
+            local BarCorner = Instance.new("UICorner")
+            BarCorner.CornerRadius = UDim.new(1, 0)
+            BarCorner.Parent = SliderBar
+            
+            AddStroke(SliderBar, Colors.Border, 1)
+            
+            local SliderFill = Instance.new("Frame")
+            SliderFill.Name = "Fill"
+            SliderFill.Parent = SliderBar
+            SliderFill.BackgroundColor3 = Colors.Accent
+            SliderFill.BorderSizePixel = 0
+            SliderFill.Size = UDim2.new((value - sliderMin) / (sliderMax - sliderMin), 0, 1, 0)
+            
+            local FillCorner = Instance.new("UICorner")
+            FillCorner.CornerRadius = UDim.new(1, 0)
+            FillCorner.Parent = SliderFill
+            
+            CreateGradient(SliderFill, ColorSequence.new{
+                ColorSequenceKeypoint.new(0, Colors.Accent),
+                ColorSequenceKeypoint.new(1, Colors.AccentDark)
+            }, 45)
+            
+            local SliderDot = Instance.new("Frame")
+            SliderDot.Name = "Dot"
+            SliderDot.Parent = SliderBar
+            SliderDot.BackgroundColor3 = Colors.TextPrimary
+            SliderDot.BorderSizePixel = 0
+            SliderDot.Position = UDim2.new((value - sliderMin) / (sliderMax - sliderMin), 0, 0.5, 0)
+            SliderDot.Size = UDim2.new(0, 14, 0, 14)
+            SliderDot.AnchorPoint = Vector2.new(0.5, 0.5)
+            SliderDot.ZIndex = 2
+            
+            local DotCorner = Instance.new("UICorner")
+            DotCorner.CornerRadius = UDim.new(1, 0)
+            DotCorner.Parent = SliderDot
+            
+            AddStroke(SliderDot, Colors.Accent, 2)
+            AddShadow(SliderDot)
+            
+            local SliderButton = Instance.new("TextButton")
+            SliderButton.Name = "SliderButton"
+            SliderButton.Parent = SliderBar
+            SliderButton.BackgroundTransparency = 1
+            SliderButton.Size = UDim2.new(1, 0, 1, 10)
+            SliderButton.Position = UDim2.new(0, 0, 0, -5)
+            SliderButton.Text = ""
+            SliderButton.ZIndex = 3
+            
+            local function UpdateSlider(input)
+                local pos = math.clamp((input.Position.X - SliderBar.AbsolutePosition.X) / SliderBar.AbsoluteSize.X, 0, 1)
+                value = math.floor((sliderMin + (sliderMax - sliderMin) * pos) / sliderIncrement + 0.5) * sliderIncrement
+                value = math.clamp(value, sliderMin, sliderMax)
+                
+                SliderValue.Text = tostring(value)
+                Tween(SliderFill, {Size = UDim2.new(pos, 0, 1, 0)}, 0.1)
+                Tween(SliderDot, {Position = UDim2.new(pos, 0, 0.5, 0)}, 0.1)
+                
+                pcall(sliderCallback, value)
+            end
+            
+            SliderButton.InputBegan:Connect(function(input)
+                if input.UserInputType == Enum.UserInputType.MouseButton1 then
+                    dragging = true
+                    UpdateSlider(input)
+                    Tween(SliderDot, {Size = UDim2.new(0, 18, 0, 18)}, 0.2, Enum.EasingStyle.Back, Enum.EasingDirection.Out)
+                end
+            end)
+            
+            SliderButton.InputEnded:Connect(function(input)
+                if input.UserInputType == Enum.UserInputType.MouseButton1 then
+                    dragging = false
+                    Tween(SliderDot, {Size = UDim2.new(0, 14, 0, 14)}, 0.2)
+                end
+            end)
+            
+            UserInputService.InputChanged:Connect(function(input)
+                if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
+                    UpdateSlider(input)
+                end
+            end)
+            
+            SliderButton.MouseEnter:Connect(function()
+                Tween(SliderFrame, {BackgroundColor3 = Colors.TertiaryBackground}, 0.2)
+            end)
+            
+            SliderButton.MouseLeave:Connect(function()
+                if not dragging then
+                    Tween(SliderFrame, {BackgroundColor3 = Colors.SecondaryBackground}, 0.2)
+                end
+            end)
+            
+            local SliderTable = {}
+            function SliderTable:SetValue(newValue)
+                value = math.clamp(newValue, sliderMin, sliderMax)
+                local pos = (value - sliderMin) / (sliderMax - sliderMin)
+                SliderValue.Text = tostring(value)
+                SliderFill.Size = UDim2.new(pos, 0, 1, 0)
+                SliderDot.Position = UDim2.new(pos, 0, 0.5, 0)
+            end
+            
+            return SliderTable
+        end
+        
+        -- Dropdown
+        function TabTable:CreateDropdown(config)
+            config = config or {}
+            local dropdownText = config.Name or config.Text or "Dropdown"
+            local dropdownOptions = config.Options or {"Option 1", "Option 2"}
+            local dropdownDefault = config.Default or dropdownOptions[1]
+            local dropdownCallback = config.Callback or function() end
+            
+            local selected = dropdownDefault
+            local expanded = false
+            
+            local DropdownFrame = Instance.new("Frame")
+            DropdownFrame.Name = "Dropdown"
+            DropdownFrame.Parent = Content
+            DropdownFrame.BackgroundColor3 = Colors.SecondaryBackground
+            DropdownFrame.BorderSizePixel = 0
+            DropdownFrame.Size = UDim2.new(1, 0, 0, 45)
+            DropdownFrame.ClipsDescendants = true
+            
+            local DropdownCorner = Instance.new("UICorner")
+            DropdownCorner.CornerRadius = UDim.new(0, 8)
+            DropdownCorner.Parent = DropdownFrame
+            
+            AddStroke(DropdownFrame, Colors.Border, 1)
+            
+            local DropdownLabel = Instance.new("TextLabel")
+            DropdownLabel.Name = "Label"
+            DropdownLabel.Parent = DropdownFrame
+            DropdownLabel.BackgroundTransparency = 1
+            DropdownLabel.Position = UDim2.new(0, 15, 0, 0)
+            DropdownLabel.Size = UDim2.new(0.5, -15, 0, 45)
+            DropdownLabel.Font = Enum.Font.GothamSemibold
+            DropdownLabel.Text = dropdownText
+            DropdownLabel.TextColor3 = Colors.TextPrimary
+            DropdownLabel.TextSize = 14
+            DropdownLabel.TextXAlignment = Enum.TextXAlignment.Left
+            
+            local DropdownButton = Instance.new("TextButton")
+            DropdownButton.Name = "Button"
+            DropdownButton.Parent = DropdownFrame
+            DropdownButton.BackgroundColor3 = Colors.TertiaryBackground
+            DropdownButton.BorderSizePixel = 0
+            DropdownButton.Position = UDim2.new(0.5, 5, 0, 8)
+            DropdownButton.Size = UDim2.new(0.5, -20, 0, 29)
+            DropdownButton.AutoButtonColor = false
+            DropdownButton.Font = Enum.Font.Gotham
+            DropdownButton.Text = "  " .. selected
+            DropdownButton.TextColor3 = Colors.TextPrimary
+            DropdownButton.TextSize = 13
+            DropdownButton.TextXAlignment = Enum.TextXAlignment.Left
+            
+            local ButtonCorner = Instance.new("UICorner")
+            ButtonCorner.CornerRadius = UDim.new(0, 6)
+            ButtonCorner.Parent = DropdownButton
+            
+            AddStroke(DropdownButton, Colors.Border, 1)
+            
+            local DropdownIcon = Instance.new("TextLabel")
+            DropdownIcon.Name = "Icon"
+            DropdownIcon.Parent = DropdownButton
+            DropdownIcon.BackgroundTransparency = 1
+            DropdownIcon.Position = UDim2.new(1, -25, 0, 0)
+            DropdownIcon.Size = UDim2.new(0, 25, 1, 0)
+            DropdownIcon.Font = Enum.Font.GothamBold
+            DropdownIcon.Text = "▼"
+            DropdownIcon.TextColor3 = Colors.Accent
+            DropdownIcon.TextSize = 12
+            
+            local DropdownList = Instance.new("ScrollingFrame")
+            DropdownList.Name = "List"
+            DropdownList.Parent = DropdownFrame
+            DropdownList.BackgroundColor3 = Colors.TertiaryBackground
+            DropdownList.BorderSizePixel = 0
+            DropdownList.Position = UDim2.new(0, 10, 0, 50)
+            DropdownList.Size = UDim2.new(1, -20, 0, 0)
+            DropdownList.Visible = false
+            DropdownList.ScrollBarThickness = 4
+            DropdownList.ScrollBarImageColor3 = Colors.Accent
+            DropdownList.CanvasSize = UDim2.new(0, 0, 0, 0)
+            
+            local ListCorner = Instance.new("UICorner")
+            ListCorner.CornerRadius = UDim.new(0, 6)
+            ListCorner.Parent = DropdownList
+            
+            AddStroke(DropdownList, Colors.Border, 1)
+            
+            local ListLayout = Instance.new("UIListLayout")
+            ListLayout.Parent = DropdownList
+            ListLayout.SortOrder = Enum.SortOrder.LayoutOrder
+            ListLayout.Padding = UDim.new(0, 2)
+            
+            local ListPadding = Instance.new("UIPadding")
+            ListPadding.Parent = DropdownList
+            ListPadding.PaddingTop = UDim.new(0, 5)
+            ListPadding.PaddingBottom = UDim.new(0, 5)
+            ListPadding.PaddingLeft = UDim.new(0, 5)
+            ListPadding.PaddingRight = UDim.new(0, 5)
+            
+            for _, option in ipairs(dropdownOptions) do
+                local OptionButton = Instance.new("TextButton")
+                OptionButton.Name = option
+                OptionButton.Parent = DropdownList
+                OptionButton.BackgroundColor3 = option == selected and Colors.Accent or Colors.SecondaryBackground
+                OptionButton.BorderSizePixel = 0
+                OptionButton.Size = UDim2.new(1, 0, 0, 32)
+                OptionButton.AutoButtonColor = false
+                OptionButton.Font = Enum.Font.Gotham
+                OptionButton.Text = option
+                OptionButton.TextColor3 = Colors.TextPrimary
+                OptionButton.TextSize = 13
+                
+                local OptionCorner = Instance.new("UICorner")
+                OptionCorner.CornerRadius = UDim.new(0, 6)
+                OptionCorner.Parent = OptionButton
+                
+                if option == selected then
+                    CreateGradient(OptionButton, ColorSequence.new{
+                        ColorSequenceKeypoint.new(0, Colors.Accent),
+                        ColorSequenceKeypoint.new(1, Colors.AccentDark)
+                    }, 45)
+                end
+                
+                OptionButton.MouseEnter:Connect(function()
+                    if option ~= selected then
+                        Tween(OptionButton, {BackgroundColor3 = Colors.BorderLight}, 0.2)
+                    end
+                end)
+                
+                OptionButton.MouseLeave:Connect(function()
+                    if option ~= selected then
+                        Tween(OptionButton, {BackgroundColor3 = Colors.SecondaryBackground}, 0.2)
+                    end
+                end)
+                
+                OptionButton.MouseButton1Click:Connect(function()
+                    selected = option
+                    DropdownButton.Text = "  " .. option
+                    
+                    for _, child in ipairs(DropdownList:GetChildren()) do
+                        if child:IsA("TextButton") then
+                            if child.Name == option then
+                                Tween(child, {BackgroundColor3 = Colors.Accent}, 0.2)
+                                if not child:FindFirstChildOfClass("UIGradient") then
+                                    CreateGradient(child, ColorSequence.new{
+                                        ColorSequenceKeypoint.new(0, Colors.Accent),
+                                        ColorSequenceKeypoint.new(1, Colors.AccentDark)
+                                    }, 45)
+                                end
+                            else
+                                Tween(child, {BackgroundColor3 = Colors.SecondaryBackground}, 0.2)
+                                local grad = child:FindFirstChildOfClass("UIGradient")
+                                if grad then grad:Destroy() end
+                            end
+                        end
+                    end
+                    
+                    expanded = false
+                    DropdownList.Visible = false
+                    Tween(DropdownFrame, {Size = UDim2.new(1, 0, 0, 45)}, 0.2)
+                    Tween(DropdownIcon, {Rotation = 0}, 0.2)
+                    
+                    pcall(dropdownCallback, option)
+                end)
+            end
+            
+            ListLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
+                DropdownList.CanvasSize = UDim2.new(0, 0, 0, ListLayout.AbsoluteContentSize.Y + 10)
+            end)
+            
+            DropdownButton.MouseButton1Click:Connect(function()
+                expanded = not expanded
+                
+                if expanded then
+                    local listHeight = math.min(ListLayout.AbsoluteContentSize.Y + 10, 150)
+                    DropdownList.Visible = true
+                    DropdownList.Size = UDim2.new(1, -20, 0, listHeight)
+                    Tween(DropdownFrame, {Size = UDim2.new(1, 0, 0, 60 + listHeight)}, 0.2)
+                    Tween(DropdownIcon, {Rotation = 180}, 0.2)
+                else
+                    DropdownList.Visible = false
+                    Tween(DropdownFrame, {Size = UDim2.new(1, 0, 0, 45)}, 0.2)
+                    Tween(DropdownIcon, {Rotation = 0}, 0.2)
+                end
+            end)
+            
+            DropdownButton.MouseEnter:Connect(function()
+                Tween(DropdownButton, {BackgroundColor3 = Colors.BorderLight}, 0.2)
+            end)
+            
+            DropdownButton.MouseLeave:Connect(function()
+                Tween(DropdownButton, {BackgroundColor3 = Colors.TertiaryBackground}, 0.2)
+            end)
+            
+            local DropdownTable = {}
+            function DropdownTable:SetValue(value)
+                selected = value
+                DropdownButton.Text = "  " .. value
+                
+                for _, child in ipairs(DropdownList:GetChildren()) do
+                    if child:IsA("TextButton") then
+                        if child.Name == value then
+                            child.BackgroundColor3 = Colors.Accent
+                            if not child:FindFirstChildOfClass("UIGradient") then
+                                CreateGradient(child, ColorSequence.new{
+                                    ColorSequenceKeypoint.new(0, Colors.Accent),
+                                    ColorSequenceKeypoint.new(1, Colors.AccentDark)
+                                }, 45)
+                            end
+                        else
+                            child.BackgroundColor3 = Colors.SecondaryBackground
+                            local grad = child:FindFirstChildOfClass("UIGradient")
+                            if grad then grad:Destroy() end
+                        end
+                    end
+                end
+            end
+            
+            function DropdownTable:Refresh(newOptions)
+                for _, child in ipairs(DropdownList:GetChildren()) do
+                    if child:IsA("TextButton") then
+                        child:Destroy()
+                    end
+                end
+                
+                for _, option in ipairs(newOptions) do
+                    local OptionButton = Instance.new("TextButton")
+                    OptionButton.Name = option
+                    OptionButton.Parent = DropdownList
+                    OptionButton.BackgroundColor3 = option == selected and Colors.Accent or Colors.SecondaryBackground
+                    OptionButton.BorderSizePixel = 0
+                    OptionButton.Size = UDim2.new(1, 0, 0, 32)
+                    OptionButton.AutoButtonColor = false
+                    OptionButton.Font = Enum.Font.Gotham
+                    OptionButton.Text = option
+                    OptionButton.TextColor3 = Colors.TextPrimary
+                    OptionButton.TextSize = 13
+                    
+                    local OptionCorner = Instance.new("UICorner")
+                    OptionCorner.CornerRadius = UDim.new(0, 6)
+                    OptionCorner.Parent = OptionButton
+                    
+                    if option == selected then
+                        CreateGradient(OptionButton, ColorSequence.new{
+                            ColorSequenceKeypoint.new(0, Colors.Accent),
+                            ColorSequenceKeypoint.new(1, Colors.AccentDark)
+                        }, 45)
+                    end
+                    
+                    OptionButton.MouseButton1Click:Connect(function()
+                        selected = option
+                        DropdownButton.Text = "  " .. option
+                        DropdownTable:SetValue(option)
+                        
+                        expanded = false
+                        DropdownList.Visible = false
+                        Tween(DropdownFrame, {Size = UDim2.new(1, 0, 0, 45)}, 0.2)
+                        
+                        pcall(dropdownCallback, option)
+                    end)
+                end
+            end
+            
+            return DropdownTable
+        end
+        
+        -- Checkbox
+        function TabTable:CreateCheckbox(config)
+            config = config or {}
+            local checkboxText = config.Name or config.Text or "Checkbox"
+            local checkboxDefault = config.Default or false
+            local checkboxCallback = config.Callback or function() end
+            
+            local checked = checkboxDefault
+            
+            local CheckboxFrame = Instance.new("Frame")
+            CheckboxFrame.Name = "Checkbox"
+            CheckboxFrame.Parent = Content
+            CheckboxFrame.BackgroundColor3 = Colors.SecondaryBackground
+            CheckboxFrame.BorderSizePixel = 0
+            CheckboxFrame.Size = UDim2.new(1, 0, 0, 45)
+            
+            local CheckboxCorner = Instance.new("UICorner")
+            CheckboxCorner.CornerRadius = UDim.new(0, 8)
+            CheckboxCorner.Parent = CheckboxFrame
+            
+            AddStroke(CheckboxFrame, Colors.Border, 1)
+            
+            local CheckboxLabel = Instance.new("TextLabel")
+            CheckboxLabel.Name = "Label"
+            CheckboxLabel.Parent = CheckboxFrame
+            CheckboxLabel.BackgroundTransparency = 1
+            CheckboxLabel.Position = UDim2.new(0, 15, 0, 0)
+            CheckboxLabel.Size = UDim2.new(0.8, -15, 1, 0)
+            CheckboxLabel.Font = Enum.Font.GothamSemibold
+            CheckboxLabel.Text = checkboxText
+            CheckboxLabel.TextColor3 = Colors.TextPrimary
+            CheckboxLabel.TextSize = 14
+            CheckboxLabel.TextXAlignment = Enum.TextXAlignment.Left
+            
+            local CheckboxButton = Instance.new("TextButton")
+            CheckboxButton.Name = "CheckboxButton"
+            CheckboxButton.Parent = CheckboxFrame
+            CheckboxButton.BackgroundColor3 = checked and Colors.Success or Colors.TertiaryBackground
+            CheckboxButton.BorderSizePixel = 0
+            CheckboxButton.Position = UDim2.new(1, -50, 0.5, 0)
+            CheckboxButton.Size = UDim2.new(0, 28, 0, 28)
+            CheckboxButton.AnchorPoint = Vector2.new(0, 0.5)
+            CheckboxButton.AutoButtonColor = false
+            CheckboxButton.Text = ""
+            
+            local CheckboxButtonCorner = Instance.new("UICorner")
+            CheckboxButtonCorner.CornerRadius = UDim.new(0, 6)
+            CheckboxButtonCorner.Parent = CheckboxButton
+            
+            AddStroke(CheckboxButton, checked and Colors.Success or Colors.Border, 1.5)
+            
+            local CheckIcon = Instance.new("TextLabel")
+            CheckIcon.Name = "Icon"
+            CheckIcon.Parent = CheckboxButton
+            CheckIcon.BackgroundTransparency = 1
+            CheckIcon.Size = UDim2.new(1, 0, 1, 0)
+            CheckIcon.Font = Enum.Font.GothamBold
+            CheckIcon.Text = "✓"
+            CheckIcon.TextColor3 = Colors.TextPrimary
+            CheckIcon.TextSize = 18
+            CheckIcon.Visible = checked
+            
+            if checked then
+                CreateGradient(CheckboxButton, ColorSequence.new{
+                    ColorSequenceKeypoint.new(0, Colors.Success),
+                    ColorSequenceKeypoint.new(1, Color3.fromRGB(60, 230, 100))
+                }, 45)
+            end
+            
+            CheckboxButton.MouseEnter:Connect(function()
+                Tween(CheckboxFrame, {BackgroundColor3 = Colors.TertiaryBackground}, 0.2)
+                Tween(CheckboxButton, {Size = UDim2.new(0, 30, 0, 30)}, 0.2)
+            end)
+            
+            CheckboxButton.MouseLeave:Connect(function()
+                Tween(CheckboxFrame, {BackgroundColor3 = Colors.SecondaryBackground}, 0.2)
+                Tween(CheckboxButton, {Size = UDim2.new(0, 28, 0, 28)}, 0.2)
+            end)
+            
+            CheckboxButton.MouseButton1Click:Connect(function()
+                checked = not checked
+                CheckIcon.Visible = checked
+                
+                if checked then
+                    Tween(CheckboxButton, {BackgroundColor3 = Colors.Success}, 0.3)
+                    if not CheckboxButton:FindFirstChildOfClass("UIGradient") then
+                        CreateGradient(CheckboxButton, ColorSequence.new{
+                            ColorSequenceKeypoint.new(0, Colors.Success),
+                            ColorSequenceKeypoint.new(1, Color3.fromRGB(60, 230, 100))
+                        }, 45)
+                    end
+                else
+                    Tween(CheckboxButton, {BackgroundColor3 = Colors.TertiaryBackground}, 0.3)
+                    local grad = CheckboxButton:FindFirstChildOfClass("UIGradient")
+                    if grad then grad:Destroy() end
+                end
+                
+                local stroke = CheckboxButton:FindFirstChildOfClass("UIStroke")
+                if stroke then
+                    Tween(stroke, {Color = checked and Colors.Success or Colors.Border}, 0.3)
+                end
+                
+                Tween(CheckIcon, {Rotation = checked and 360 or 0}, 0.3, Enum.EasingStyle.Back, Enum.EasingDirection.Out)
+                
+                pcall(checkboxCallback, checked)
+            end)
+            
+            local CheckboxTable = {}
+            function CheckboxTable:SetValue(value)
+                checked = value
+                CheckIcon.Visible = checked
+                
+                if checked then
+                    CheckboxButton.BackgroundColor3 = Colors.Success
+                    if not CheckboxButton:FindFirstChildOfClass("UIGradient") then
+                        CreateGradient(CheckboxButton, ColorSequence.new{
+                            ColorSequenceKeypoint.new(0, Colors.Success),
+                            ColorSequenceKeypoint.new(1, Color3.fromRGB(60, 230, 100))
+                        }, 45)
+                    end
+                else
+                    CheckboxButton.BackgroundColor3 = Colors.TertiaryBackground
+                    local grad = CheckboxButton:FindFirstChildOfClass("UIGradient")
+                    if grad then grad:Destroy() end
+                end
+                
+                local stroke = CheckboxButton:FindFirstChildOfClass("UIStroke")
+                if stroke then
+                    stroke.Color = checked and Colors.Success or Colors.Border
+                end
+            end
+            
+            return CheckboxTable
+        end
+        
+        -- Input (TextBox)
+        function TabTable:CreateInput(config)
+            config = config or {}
+            local inputText = config.Name or config.Text or "Input"
+            local inputDefault = config.Default or ""
+            local inputPlaceholder = config.Placeholder or "Enter text..."
+            local inputCallback = config.Callback or function() end
+            
+            local InputFrame = Instance.new("Frame")
+            InputFrame.Name = "Input"
+            InputFrame.Parent = Content
+            InputFrame.BackgroundColor3 = Colors.SecondaryBackground
+            InputFrame.BorderSizePixel = 0
+            InputFrame.Size = UDim2.new(1, 0, 0, 45)
+            
+            local InputCorner = Instance.new("UICorner")
+            InputCorner.CornerRadius = UDim.new(0, 8)
+            InputCorner.Parent = InputFrame
+            
+            AddStroke(InputFrame, Colors.Border, 1)
+            
+            local InputLabel = Instance.new("TextLabel")
+            InputLabel.Name = "Label"
+            InputLabel.Parent = InputFrame
+            InputLabel.BackgroundTransparency = 1
+            InputLabel.Position = UDim2.new(0, 15, 0, 0)
+            InputLabel.Size = UDim2.new(0.4, -15, 1, 0)
+            InputLabel.Font = Enum.Font.GothamSemibold
+            InputLabel.Text = inputText
+            InputLabel.TextColor3 = Colors.TextPrimary
+            InputLabel.TextSize = 14
+            InputLabel.TextXAlignment = Enum.TextXAlignment.Left
+            
+            local InputBox = Instance.new("TextBox")
+            InputBox.Name = "InputBox"
+            InputBox.Parent = InputFrame
+            InputBox.BackgroundColor3 = Colors.TertiaryBackground
+            InputBox.BorderSizePixel = 0
+            InputBox.Position = UDim2.new(0.4, 5, 0, 8)
+            InputBox.Size = UDim2.new(0.6, -20, 0, 29)
+            InputBox.Font = Enum.Font.Gotham
+            InputBox.PlaceholderText = inputPlaceholder
+            InputBox.PlaceholderColor3 = Colors.TextTertiary
+            InputBox.Text = inputDefault
+            InputBox.TextColor3 = Colors.TextPrimary
+            InputBox.TextSize = 13
+            InputBox.TextXAlignment = Enum.TextXAlignment.Left
+            InputBox.ClearTextOnFocus = false
+            
+            local InputBoxCorner = Instance.new("UICorner")
+            InputBoxCorner.CornerRadius = UDim.new(0, 6)
+            InputBoxCorner.Parent = InputBox
+            
+            local InputBoxPadding = Instance.new("UIPadding")
+            InputBoxPadding.Parent = InputBox
+            InputBoxPadding.PaddingLeft = UDim.new(0, 10)
+            InputBoxPadding.PaddingRight = UDim.new(0, 10)
+            
+            AddStroke(InputBox, Colors.Border, 1)
+            
+            InputBox.Focused:Connect(function()
+                Tween(InputFrame, {BackgroundColor3 = Colors.TertiaryBackground}, 0.2)
+                local stroke = InputBox:FindFirstChildOfClass("UIStroke")
+                if stroke then
+                    Tween(stroke, {Color = Colors.Accent, Thickness = 1.5}, 0.2)
+                end
+            end)
+            
+            InputBox.FocusLost:Connect(function()
+                Tween(InputFrame, {BackgroundColor3 = Colors.SecondaryBackground}, 0.2)
+                local stroke = InputBox:FindFirstChildOfClass("UIStroke")
+                if stroke then
+                    Tween(stroke, {Color = Colors.Border, Thickness = 1}, 0.2)
+                end
+                pcall(inputCallback, InputBox.Text)
+            end)
+            
+            local InputTable = {}
+            function InputTable:SetValue(value)
+                InputBox.Text = value
+            end
+            
+            return InputTable
+        end
+        
         return TabTable
     end
     
