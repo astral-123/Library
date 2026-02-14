@@ -1,8 +1,3 @@
--- Solix Hub Style UI Library
--- Two-Column Layout with Transparent Background
--- Purple Theme
--- Created by Astral
-
 local SolixUI = {}
 local TweenService = game:GetService("TweenService")
 local UserInputService = game:GetService("UserInputService")
@@ -13,11 +8,8 @@ local Theme = {
     Background = Color3.fromRGB(15, 15, 20),
     Sidebar = Color3.fromRGB(10, 10, 15),
     TopBar = Color3.fromRGB(8, 8, 12),
-    Section = Color3.fromRGB(18, 18, 23),
     Element = Color3.fromRGB(22, 22, 27),
-    Primary = Color3.fromRGB(130, 70, 200),      -- Violet
-    Secondary = Color3.fromRGB(100, 50, 160),     -- Violet foncé
-    Accent = Color3.fromRGB(160, 100, 230),       -- Violet clair
+    Primary = Color3.fromRGB(130, 70, 200),
     Text = Color3.fromRGB(255, 255, 255),
     TextDark = Color3.fromRGB(150, 150, 160),
     Toggle = Color3.fromRGB(130, 70, 200),
@@ -109,18 +101,6 @@ function SolixUI:CreateWindow(config)
     MainStroke.Transparency = 0.5
     MainStroke.Parent = MainFrame
     
-    -- Shadow
-    local Shadow = Instance.new("ImageLabel")
-    Shadow.Name = "Shadow"
-    Shadow.Size = UDim2.new(1, 40, 1, 40)
-    Shadow.Position = UDim2.new(0, -20, 0, -20)
-    Shadow.BackgroundTransparency = 1
-    Shadow.Image = "rbxassetid://5554236805"
-    Shadow.ImageColor3 = Color3.fromRGB(0, 0, 0)
-    Shadow.ImageTransparency = 0.3
-    Shadow.ZIndex = 0
-    Shadow.Parent = MainFrame
-    
     -- Top Bar
     local TopBar = Instance.new("Frame")
     TopBar.Name = "TopBar"
@@ -162,7 +142,7 @@ function SolixUI:CreateWindow(config)
     CloseButton.Position = UDim2.new(1, -28, 0, 2.5)
     CloseButton.BackgroundTransparency = 1
     CloseButton.Text = "X"
-    MinimizeButton.TextColor3 = Theme.Text
+    CloseButton.TextColor3 = Theme.Text
     CloseButton.TextSize = 14
     CloseButton.Font = Enum.Font.GothamBold
     CloseButton.Parent = TopBar
@@ -352,9 +332,7 @@ function SolixUI:CreateWindow(config)
     -- Create Tab
     function Window:CreateTab(tabName)
         local Tab = {
-            Name = tabName,
-            LeftColumn = {},
-            RightColumn = {}
+            Name = tabName
         }
         
         -- Tab Button
@@ -595,6 +573,42 @@ function SolixUI:CreateWindow(config)
                 return ToggleFrame
             end
             
+            function Section:AddButton(config)
+                config = config or {}
+                local ButtonName = config.Name or "Button"
+                local Callback = config.Callback or function() end
+                
+                local ButtonFrame = Instance.new("TextButton")
+                ButtonFrame.Name = "Button_" .. ButtonName
+                ButtonFrame.Size = UDim2.new(1, 0, 0, 35)
+                ButtonFrame.BackgroundColor3 = Theme.Primary
+                ButtonFrame.BackgroundTransparency = 0.3
+                ButtonFrame.BorderSizePixel = 0
+                ButtonFrame.Text = ButtonName
+                ButtonFrame.TextColor3 = Theme.Text
+                ButtonFrame.TextSize = 12
+                ButtonFrame.Font = Enum.Font.GothamBold
+                ButtonFrame.Parent = SectionFrame
+                
+                local ButtonCorner = Instance.new("UICorner")
+                ButtonCorner.CornerRadius = UDim.new(0, 4)
+                ButtonCorner.Parent = ButtonFrame
+                
+                ButtonFrame.MouseButton1Click:Connect(function()
+                    Callback()
+                end)
+                
+                ButtonFrame.MouseEnter:Connect(function()
+                    Tween(ButtonFrame, {BackgroundTransparency = 0.1})
+                end)
+                
+                ButtonFrame.MouseLeave:Connect(function()
+                    Tween(ButtonFrame, {BackgroundTransparency = 0.3})
+                end)
+                
+                return ButtonFrame
+            end
+            
             function Section:AddSlider(config)
                 config = config or {}
                 local SliderName = config.Name or "Slider"
@@ -811,47 +825,6 @@ function SolixUI:CreateWindow(config)
                 end)
                 
                 return DropdownFrame
-            end
-            
-            function Section:AddLabel(config)
-                config = config or {}
-                local LabelText = config.Text or "Label"
-                local Icon = config.Icon or ""
-                
-                local LabelFrame = Instance.new("Frame")
-                LabelFrame.Name = "Label"
-                LabelFrame.Size = UDim2.new(1, 0, 0, 25)
-                LabelFrame.BackgroundColor3 = Theme.Element
-                LabelFrame.BackgroundTransparency = 0.5
-                LabelFrame.BorderSizePixel = 0
-                LabelFrame.Parent = SectionFrame
-                
-                local LabelCorner = Instance.new("UICorner")
-                LabelCorner.CornerRadius = UDim.new(0, 3)
-                LabelCorner.Parent = LabelFrame
-                
-                local IconLabel = Instance.new("TextLabel")
-                IconLabel.Size = UDim2.new(0, 20, 1, 0)
-                IconLabel.Position = UDim2.new(0, 5, 0, 0)
-                IconLabel.BackgroundTransparency = 1
-                IconLabel.Text = Icon
-                IconLabel.TextColor3 = Theme.Primary
-                IconLabel.TextSize = 12
-                IconLabel.Font = Enum.Font.Gotham
-                IconLabel.Parent = LabelFrame
-                
-                local Label = Instance.new("TextLabel")
-                Label.Size = UDim2.new(1, -30, 1, 0)
-                Label.Position = UDim2.new(0, Icon ~= "" and 25 or 8, 0, 0)
-                Label.BackgroundTransparency = 1
-                Label.Text = LabelText
-                Label.TextColor3 = Theme.Text
-                Label.TextSize = 11
-                Label.Font = Enum.Font.Gotham
-                Label.TextXAlignment = Enum.TextXAlignment.Left
-                Label.Parent = LabelFrame
-                
-                return LabelFrame
             end
             
             return Section
