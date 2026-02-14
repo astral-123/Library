@@ -1,7 +1,7 @@
--- Nebula Hub Library
+-- Nebula Hub Library - Improved Version
 -- Modern UI Library with Left Sidebar
--- Purple Theme
--- By Astral
+-- Purple Theme with Minimize & Resize Features
+-- By Astral (Modified)
 
 local NebulaHub = {}
 local TweenService = game:GetService("TweenService")
@@ -70,7 +70,7 @@ end
 function NebulaHub:CreateWindow(config)
     config = config or {}
     local WindowName = config.Name or "Nebula Hub"
-    local ToggleKey = config.ToggleKey or Enum.KeyCode.RightControl
+    local ToggleKey = config.ToggleKey or Enum.KeyCode.V
     
     -- ScreenGui
     local NebulaGui = Instance.new("ScreenGui")
@@ -112,10 +112,11 @@ function NebulaHub:CreateWindow(config)
     Shadow.ZIndex = 0
     Shadow.Parent = MainFrame
     
-    -- Top Bar
+    -- Top Bar (Transparent)
     local TopBar = Instance.new("Frame")
     TopBar.Name = "TopBar"
     TopBar.Size = UDim2.new(1, 0, 0, 40)
+    TopBar.BackgroundTransparency = 0.3
     TopBar.BackgroundColor3 = Theme.Sidebar
     TopBar.BorderSizePixel = 0
     TopBar.Parent = MainFrame
@@ -127,11 +128,12 @@ function NebulaHub:CreateWindow(config)
     local TopBarCover = Instance.new("Frame")
     TopBarCover.Size = UDim2.new(1, 0, 0, 20)
     TopBarCover.Position = UDim2.new(0, 0, 1, -20)
+    TopBarCover.BackgroundTransparency = 0.3
     TopBarCover.BackgroundColor3 = Theme.Sidebar
     TopBarCover.BorderSizePixel = 0
     TopBarCover.Parent = TopBar
     
-    -- Title
+    -- Title (Gradient Effect)
     local Title = Instance.new("TextLabel")
     Title.Name = "Title"
     Title.Size = UDim2.new(0, 200, 1, 0)
@@ -139,10 +141,36 @@ function NebulaHub:CreateWindow(config)
     Title.BackgroundTransparency = 1
     Title.Text = WindowName
     Title.TextColor3 = Theme.Text
-    Title.TextSize = 16
+    Title.TextSize = 18
     Title.Font = Enum.Font.GothamBold
     Title.TextXAlignment = Enum.TextXAlignment.Left
+    Title.TextStrokeTransparency = 0.8
     Title.Parent = TopBar
+    
+    -- Add gradient to title
+    local TitleGradient = Instance.new("UIGradient")
+    TitleGradient.Color = ColorSequence.new{
+        ColorSequenceKeypoint.new(0, Theme.Primary),
+        ColorSequenceKeypoint.new(1, Theme.Accent)
+    }
+    TitleGradient.Parent = Title
+    
+    -- Minimize Button
+    local MinimizeButton = Instance.new("TextButton")
+    MinimizeButton.Name = "MinimizeButton"
+    MinimizeButton.Size = UDim2.new(0, 30, 0, 30)
+    MinimizeButton.Position = UDim2.new(1, -70, 0, 5)
+    MinimizeButton.BackgroundColor3 = Theme.TabButton
+    MinimizeButton.BorderSizePixel = 0
+    MinimizeButton.Text = "−"
+    MinimizeButton.TextColor3 = Theme.Text
+    MinimizeButton.TextSize = 16
+    MinimizeButton.Font = Enum.Font.GothamBold
+    MinimizeButton.Parent = TopBar
+    
+    local MinimizeCorner = Instance.new("UICorner")
+    MinimizeCorner.CornerRadius = UDim.new(0, 6)
+    MinimizeCorner.Parent = MinimizeButton
     
     -- Close Button
     local CloseButton = Instance.new("TextButton")
@@ -161,6 +189,41 @@ function NebulaHub:CreateWindow(config)
     CloseCorner.CornerRadius = UDim.new(0, 6)
     CloseCorner.Parent = CloseButton
     
+    -- Minimize Message (Bottom Right)
+    local MinimizeMessage = Instance.new("TextLabel")
+    MinimizeMessage.Name = "MinimizeMessage"
+    MinimizeMessage.Size = UDim2.new(0, 200, 0, 30)
+    MinimizeMessage.Position = UDim2.new(1, -210, 1, -40)
+    MinimizeMessage.BackgroundColor3 = Theme.Sidebar
+    MinimizeMessage.BackgroundTransparency = 0.2
+    MinimizeMessage.BorderSizePixel = 0
+    MinimizeMessage.Text = "Press V to open"
+    MinimizeMessage.TextColor3 = Theme.Text
+    MinimizeMessage.TextSize = 12
+    MinimizeMessage.Font = Enum.Font.GothamBold
+    MinimizeMessage.Visible = false
+    MinimizeMessage.Parent = NebulaGui
+    
+    local MinimizeMsgCorner = Instance.new("UICorner")
+    MinimizeMsgCorner.CornerRadius = UDim.new(0, 6)
+    MinimizeMsgCorner.Parent = MinimizeMessage
+    
+    local MinimizeMsgStroke = Instance.new("UIStroke")
+    MinimizeMsgStroke.Color = Theme.Primary
+    MinimizeMsgStroke.Thickness = 1
+    MinimizeMsgStroke.Parent = MinimizeMessage
+    
+    -- Minimize functionality
+    local isMinimized = false
+    
+    MinimizeButton.MouseButton1Click:Connect(function()
+        isMinimized = true
+        Tween(MainFrame, {Size = UDim2.new(0, 0, 0, 0)}, 0.3)
+        task.wait(0.3)
+        MainFrame.Visible = false
+        MinimizeMessage.Visible = true
+    end)
+    
     CloseButton.MouseButton1Click:Connect(function()
         NebulaGui:Destroy()
     end)
@@ -171,6 +234,64 @@ function NebulaHub:CreateWindow(config)
     
     CloseButton.MouseLeave:Connect(function()
         Tween(CloseButton, {BackgroundColor3 = Theme.TabButton})
+    end)
+    
+    MinimizeButton.MouseEnter:Connect(function()
+        Tween(MinimizeButton, {BackgroundColor3 = Theme.Primary})
+    end)
+    
+    MinimizeButton.MouseLeave:Connect(function()
+        Tween(MinimizeButton, {BackgroundColor3 = Theme.TabButton})
+    end)
+    
+    -- Resize Handle (Bottom Right)
+    local ResizeHandle = Instance.new("Frame")
+    ResizeHandle.Name = "ResizeHandle"
+    ResizeHandle.Size = UDim2.new(0, 20, 0, 20)
+    ResizeHandle.Position = UDim2.new(1, -20, 1, -20)
+    ResizeHandle.BackgroundColor3 = Theme.Primary
+    ResizeHandle.BorderSizePixel = 0
+    ResizeHandle.Parent = MainFrame
+    
+    local ResizeCorner = Instance.new("UICorner")
+    ResizeCorner.CornerRadius = UDim.new(0, 4)
+    ResizeCorner.Parent = ResizeHandle
+    
+    -- Resize Icon
+    local ResizeIcon = Instance.new("TextLabel")
+    ResizeIcon.Size = UDim2.new(1, 0, 1, 0)
+    ResizeIcon.BackgroundTransparency = 1
+    ResizeIcon.Text = "⋰"
+    ResizeIcon.TextColor3 = Theme.Text
+    ResizeIcon.TextSize = 14
+    ResizeIcon.Font = Enum.Font.GothamBold
+    ResizeIcon.Parent = ResizeHandle
+    
+    -- Resize functionality
+    local resizing = false
+    local resizeStart, sizeStart
+    
+    ResizeHandle.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 then
+            resizing = true
+            resizeStart = input.Position
+            sizeStart = MainFrame.AbsoluteSize
+        end
+    end)
+    
+    ResizeHandle.InputEnded:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 then
+            resizing = false
+        end
+    end)
+    
+    UserInputService.InputChanged:Connect(function(input)
+        if resizing and input.UserInputType == Enum.UserInputType.MouseMovement then
+            local delta = input.Position - resizeStart
+            local newWidth = math.max(500, sizeStart.X + delta.X)
+            local newHeight = math.max(400, sizeStart.Y + delta.Y)
+            MainFrame.Size = UDim2.new(0, newWidth, 0, newHeight)
+        end
     end)
     
     -- Sidebar
@@ -230,12 +351,22 @@ function NebulaHub:CreateWindow(config)
     -- Make Draggable
     MakeDraggable(MainFrame, TopBar)
     
-    -- Toggle UI
-    local UIVisible = true
+    -- Toggle UI with V key
     UserInputService.InputBegan:Connect(function(input, gameProcessed)
         if not gameProcessed and input.KeyCode == ToggleKey then
-            UIVisible = not UIVisible
-            MainFrame.Visible = UIVisible
+            if isMinimized then
+                isMinimized = false
+                MinimizeMessage.Visible = false
+                MainFrame.Visible = true
+                MainFrame.Size = UDim2.new(0, 0, 0, 0)
+                Tween(MainFrame, {Size = UDim2.new(0, 700, 0, 500)}, 0.3)
+            else
+                isMinimized = true
+                Tween(MainFrame, {Size = UDim2.new(0, 0, 0, 0)}, 0.3)
+                task.wait(0.3)
+                MainFrame.Visible = false
+                MinimizeMessage.Visible = true
+            end
         end
     end)
     
@@ -249,8 +380,7 @@ function NebulaHub:CreateWindow(config)
     function Window:CreateTab(tabName)
         local Tab = {
             Name = tabName,
-            Elements = {},
-            Sections = {}
+            Elements = {}
         }
         
         -- Tab Button
@@ -354,37 +484,6 @@ function NebulaHub:CreateWindow(config)
         
         -- Tab Functions
         
-        -- Create Section
-        function Tab:CreateSection(sectionName)
-            local SectionFrame = Instance.new("Frame")
-            SectionFrame.Name = "Section_" .. sectionName
-            SectionFrame.Size = UDim2.new(1, 0, 0, 30)
-            SectionFrame.BackgroundTransparency = 1
-            SectionFrame.BorderSizePixel = 0
-            SectionFrame.Parent = TabContent
-            
-            local SectionLabel = Instance.new("TextLabel")
-            SectionLabel.Size = UDim2.new(1, 0, 1, 0)
-            SectionLabel.BackgroundTransparency = 1
-            SectionLabel.Text = sectionName
-            SectionLabel.TextColor3 = Theme.Primary
-            SectionLabel.TextSize = 14
-            SectionLabel.Font = Enum.Font.GothamBold
-            SectionLabel.TextXAlignment = Enum.TextXAlignment.Left
-            SectionLabel.Parent = SectionFrame
-            
-            local SectionLine = Instance.new("Frame")
-            SectionLine.Size = UDim2.new(1, 0, 0, 1)
-            SectionLine.Position = UDim2.new(0, 0, 1, -1)
-            SectionLine.BackgroundColor3 = Theme.Border
-            SectionLine.BorderSizePixel = 0
-            SectionLine.Parent = SectionFrame
-            
-            table.insert(Tab.Sections, SectionFrame)
-            return SectionFrame
-        end
-        
-        -- Create Toggle
         function Tab:CreateToggle(config)
             config = config or {}
             local ToggleName = config.Name or "Toggle"
@@ -462,7 +561,6 @@ function NebulaHub:CreateWindow(config)
             return ToggleFrame
         end
         
-        -- Create Slider
         function Tab:CreateSlider(config)
             config = config or {}
             local SliderName = config.Name or "Slider"
@@ -561,7 +659,6 @@ function NebulaHub:CreateWindow(config)
             return SliderFrame
         end
         
-        -- Create Button
         function Tab:CreateButton(config)
             config = config or {}
             local ButtonName = config.Name or "Button"
@@ -598,7 +695,6 @@ function NebulaHub:CreateWindow(config)
             return ButtonFrame
         end
         
-        -- Create Dropdown
         function Tab:CreateDropdown(config)
             config = config or {}
             local DropdownName = config.Name or "Dropdown"
@@ -717,29 +813,6 @@ function NebulaHub:CreateWindow(config)
             
             table.insert(Tab.Elements, DropdownFrame)
             return DropdownFrame
-        end
-        
-        -- Create Label
-        function Tab:CreateLabel(labelText)
-            local LabelFrame = Instance.new("Frame")
-            LabelFrame.Name = "Label"
-            LabelFrame.Size = UDim2.new(1, 0, 0, 30)
-            LabelFrame.BackgroundTransparency = 1
-            LabelFrame.BorderSizePixel = 0
-            LabelFrame.Parent = TabContent
-            
-            local Label = Instance.new("TextLabel")
-            Label.Size = UDim2.new(1, 0, 1, 0)
-            Label.BackgroundTransparency = 1
-            Label.Text = labelText
-            Label.TextColor3 = Theme.TextDark
-            Label.TextSize = 12
-            Label.Font = Enum.Font.Gotham
-            Label.TextXAlignment = Enum.TextXAlignment.Left
-            Label.Parent = LabelFrame
-            
-            table.insert(Tab.Elements, LabelFrame)
-            return LabelFrame
         end
         
         return Tab
