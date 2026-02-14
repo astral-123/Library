@@ -1,6 +1,4 @@
--- NebulaUI Library v2.0
 -- By Astral
--- With Settings & Configuration System
 
 local TweenService = game:GetService("TweenService")
 local UserInputService = game:GetService("UserInputService")
