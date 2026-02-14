@@ -659,18 +659,8 @@ function NebulaUI:CreateWindow(config)
         
         if writefile then
             writefile("NebulaHub_" .. configName .. ".json", configData)
-            Window:Notification({
-                Title = "Config Saved",
-                Text = "Config '" .. configName .. "' saved successfully!",
-                Duration = 3
-            })
             return true
         else
-            Window:Notification({
-                Title = "Error",
-                Text = "writefile not supported!",
-                Duration = 3
-            })
             return false
         end
     end
@@ -689,19 +679,8 @@ function NebulaUI:CreateWindow(config)
                         ConfigSystem.Flags[flag]:Set(value)
                     end
                 end
-                Window:Notification({
-                    Title = "Config Loaded",
-                    Text = "Config '" .. configName .. "' loaded successfully!",
-                    Duration = 3
-                })
                 return true
             end
-        else
-            Window:Notification({
-                Title = "Error",
-                Text = "Config not found!",
-                Duration = 3
-            })
         end
         return false
     end
@@ -716,6 +695,10 @@ function NebulaUI:CreateWindow(config)
                     table.insert(configs, configName)
                 end
             end
+        end
+        
+        if #configs == 0 then
+            table.insert(configs, "None")
         end
         
         return configs
@@ -879,6 +862,7 @@ function NebulaUI:CreateWindow(config)
         -- Si c'est le tab Settings, on ajoute automatiquement les sections
         if isSettings then
             task.defer(function()
+                -- LEFT SECTION - UI Settings
                 local SettingsLeft = Tab:AddSection("UI Settings", "left")
                 
                 SettingsLeft:AddKeybind({
@@ -892,52 +876,242 @@ function NebulaUI:CreateWindow(config)
                     end
                 })
                 
-                local SettingsRight = Tab:AddSection("Config", "right")
+                SettingsLeft:AddLabel({
+                    Text = "Change the key to toggle UI visibility"
+                })
+                
+                -- RIGHT SECTION - Config Management
+                local SettingsRight = Tab:AddSection("Config System", "right")
                 
                 local configNameInput = ""
+                local currentSelectedConfig = "None"
+                local configListContainer = nil
                 
+                -- Textbox pour nom de config
                 SettingsRight:AddInput({
                     Name = "Config Name",
-                    PlaceholderText = "Enter config name...",
-                    Flag = "ConfigName",
+                    PlaceholderText = "MyConfig",
                     Callback = function(text)
                         configNameInput = text
                     end
                 })
                 
+                -- Créer un conteneur personnalisé pour la liste des configs
+                local ConfigListFrame = Instance.new("Frame")
+                ConfigListFrame.Name = "ConfigList"
+                ConfigListFrame.Size = UDim2.new(1, 0, 0, 0)
+                ConfigListFrame.BackgroundColor3 = Theme.Element
+                ConfigListFrame.BackgroundTransparency = 0.5
+                ConfigListFrame.BorderSizePixel = 0
+                ConfigListFrame.AutomaticSize = Enum.AutomaticSize.Y
+                ConfigListFrame.Parent = RightColumn
+                
+                local ConfigListCorner = Instance.new("UICorner")
+                ConfigListCorner.CornerRadius = UDim.new(0, 3)
+                ConfigListCorner.Parent = ConfigListFrame
+                
+                local ConfigListTitle = Instance.new("TextLabel")
+                ConfigListTitle.Size = UDim2.new(1, 0, 0, 25)
+                ConfigListTitle.BackgroundTransparency = 1
+                ConfigListTitle.Text = "Saved Configs"
+                ConfigListTitle.TextColor3 = Theme.Text
+                ConfigListTitle.TextSize = 12
+                ConfigListTitle.Font = Enum.Font.GothamBold
+                ConfigListTitle.TextXAlignment = Enum.TextXAlignment.Left
+                ConfigListTitle.Parent = ConfigListFrame
+                
+                local ConfigListTitlePadding = Instance.new("UIPadding")
+                ConfigListTitlePadding.PaddingLeft = UDim.new(0, 8)
+                ConfigListTitlePadding.PaddingTop = UDim.new(0, 5)
+                ConfigListTitlePadding.Parent = ConfigListTitle
+                
+                local ConfigListContainer = Instance.new("Frame")
+                ConfigListContainer.Name = "Container"
+                ConfigListContainer.Size = UDim2.new(1, -16, 0, 0)
+                ConfigListContainer.Position = UDim2.new(0, 8, 0, 30)
+                ConfigListContainer.BackgroundTransparency = 1
+                ConfigListContainer.AutomaticSize = Enum.AutomaticSize.Y
+                ConfigListContainer.Parent = ConfigListFrame
+                
+                local ConfigListLayout = Instance.new("UIListLayout")
+                ConfigListLayout.SortOrder = Enum.SortOrder.LayoutOrder
+                ConfigListLayout.Padding = UDim.new(0, 3)
+                ConfigListLayout.Parent = ConfigListContainer
+                
+                local ConfigListPadding = Instance.new("UIPadding")
+                ConfigListPadding.PaddingBottom = UDim.new(0, 8)
+                ConfigListPadding.Parent = ConfigListFrame
+                
+                -- Fonction pour créer un bouton de config
+                local function CreateConfigButton(configName)
+                    local ConfigButton = Instance.new("Frame")
+                    ConfigButton.Name = "ConfigButton_" .. configName
+                    ConfigButton.Size = UDim2.new(1, 0, 0, 30)
+                    ConfigButton.BackgroundColor3 = Theme.SliderBg
+                    ConfigButton.BorderSizePixel = 0
+                    ConfigButton.Parent = ConfigListContainer
+                    
+                    local ConfigButtonCorner = Instance.new("UICorner")
+                    ConfigButtonCorner.CornerRadius = UDim.new(0, 3)
+                    ConfigButtonCorner.Parent = ConfigButton
+                    
+                    local ConfigNameLabel = Instance.new("TextLabel")
+                    ConfigNameLabel.Size = UDim2.new(1, -80, 1, 0)
+                    ConfigNameLabel.Position = UDim2.new(0, 8, 0, 0)
+                    ConfigNameLabel.BackgroundTransparency = 1
+                    ConfigNameLabel.Text = configName
+                    ConfigNameLabel.TextColor3 = Theme.Text
+                    ConfigNameLabel.TextSize = 10
+                    ConfigNameLabel.Font = Enum.Font.Gotham
+                    ConfigNameLabel.TextXAlignment = Enum.TextXAlignment.Left
+                    ConfigNameLabel.Parent = ConfigButton
+                    
+                    -- Button LOAD
+                    local LoadButton = Instance.new("TextButton")
+                    LoadButton.Size = UDim2.new(0, 30, 0, 22)
+                    LoadButton.Position = UDim2.new(1, -66, 0, 4)
+                    LoadButton.BackgroundColor3 = Theme.Primary
+                    LoadButton.BorderSizePixel = 0
+                    LoadButton.Text = "Load"
+                    LoadButton.TextColor3 = Theme.Text
+                    LoadButton.TextSize = 9
+                    LoadButton.Font = Enum.Font.GothamBold
+                    LoadButton.Parent = ConfigButton
+                    
+                    local LoadCorner = Instance.new("UICorner")
+                    LoadCorner.CornerRadius = UDim.new(0, 3)
+                    LoadCorner.Parent = LoadButton
+                    
+                    LoadButton.MouseButton1Click:Connect(function()
+                        local success = Window:LoadConfig(configName)
+                        if success then
+                            Window:Notification({
+                                Title = "Config Loaded",
+                                Text = "Loaded '" .. configName .. "'",
+                                Duration = 2
+                            })
+                        end
+                    end)
+                    
+                    LoadButton.MouseEnter:Connect(function()
+                        Tween(LoadButton, {BackgroundColor3 = Color3.fromRGB(150, 90, 220)}, 0.2)
+                    end)
+                    
+                    LoadButton.MouseLeave:Connect(function()
+                        Tween(LoadButton, {BackgroundColor3 = Theme.Primary}, 0.2)
+                    end)
+                    
+                    -- Button DELETE
+                    local DeleteButton = Instance.new("TextButton")
+                    DeleteButton.Size = UDim2.new(0, 30, 0, 22)
+                    DeleteButton.Position = UDim2.new(1, -34, 0, 4)
+                    DeleteButton.BackgroundColor3 = Color3.fromRGB(200, 70, 70)
+                    DeleteButton.BorderSizePixel = 0
+                    DeleteButton.Text = "Del"
+                    DeleteButton.TextColor3 = Theme.Text
+                    DeleteButton.TextSize = 9
+                    DeleteButton.Font = Enum.Font.GothamBold
+                    DeleteButton.Parent = ConfigButton
+                    
+                    local DeleteCorner = Instance.new("UICorner")
+                    DeleteCorner.CornerRadius = UDim.new(0, 3)
+                    DeleteCorner.Parent = DeleteButton
+                    
+                    DeleteButton.MouseButton1Click:Connect(function()
+                        if delfile then
+                            delfile("NebulaHub_" .. configName .. ".json")
+                            ConfigButton:Destroy()
+                            Window:Notification({
+                                Title = "Config Deleted",
+                                Text = "Deleted '" .. configName .. "'",
+                                Duration = 2
+                            })
+                        end
+                    end)
+                    
+                    DeleteButton.MouseEnter:Connect(function()
+                        Tween(DeleteButton, {BackgroundColor3 = Color3.fromRGB(220, 90, 90)}, 0.2)
+                    end)
+                    
+                    DeleteButton.MouseLeave:Connect(function()
+                        Tween(DeleteButton, {BackgroundColor3 = Color3.fromRGB(200, 70, 70)}, 0.2)
+                    end)
+                end
+                
+                -- Charger les configs existantes
+                local function RefreshConfigList()
+                    -- Clear existing buttons
+                    for _, child in ipairs(ConfigListContainer:GetChildren()) do
+                        if child:IsA("Frame") then
+                            child:Destroy()
+                        end
+                    end
+                    
+                    -- Créer les boutons pour chaque config
+                    local configs = Window:GetConfigList()
+                    for _, configName in ipairs(configs) do
+                        if configName ~= "None" then
+                            CreateConfigButton(configName)
+                        end
+                    end
+                end
+                
+                RefreshConfigList()
+                
+                -- Button SAVE CONFIG
                 SettingsRight:AddButton({
                     Name = "Save Config",
                     Callback = function()
                         if configNameInput ~= "" then
-                            Window:SaveConfig(configNameInput)
+                            local success = Window:SaveConfig(configNameInput)
+                            if success then
+                                Window:Notification({
+                                    Title = "Config Saved",
+                                    Text = "Saved '" .. configNameInput .. "'",
+                                    Duration = 3
+                                })
+                                RefreshConfigList()
+                            end
                         else
                             Window:Notification({
                                 Title = "Error",
-                                Text = "Please enter a config name!",
+                                Text = "Enter a config name!",
                                 Duration = 3
                             })
                         end
                     end
                 })
                 
-                local ConfigDropdown = SettingsRight:AddDropdown({
-                    Name = "Load Config",
-                    Options = Window:GetConfigList(),
-                    Default = "Select Config",
-                    Callback = function(value)
-                        if value ~= "Select Config" then
-                            Window:LoadConfig(value)
+                -- Button EXPORT CONFIG (copie la config actuelle en clipboard)
+                SettingsRight:AddButton({
+                    Name = "Export Config",
+                    Callback = function()
+                        local configData = HttpService:JSONEncode(ConfigSystem.Flags)
+                        if setclipboard then
+                            setclipboard(configData)
+                            Window:Notification({
+                                Title = "Exported",
+                                Text = "Config copied to clipboard!",
+                                Duration = 3
+                            })
+                        else
+                            Window:Notification({
+                                Title = "Error",
+                                Text = "setclipboard not supported!",
+                                Duration = 3
+                            })
                         end
                     end
                 })
                 
+                -- Button REFRESH
                 SettingsRight:AddButton({
-                    Name = "Refresh Configs",
+                    Name = "Refresh List",
                     Callback = function()
-                        -- Refresh dropdown options
+                        RefreshConfigList()
                         Window:Notification({
                             Title = "Refreshed",
-                            Text = "Config list refreshed!",
+                            Text = "Config list updated!",
                             Duration = 2
                         })
                     end
