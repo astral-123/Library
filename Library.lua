@@ -2,7 +2,7 @@
 -- With Key System & Resize Option
 -- Purple Theme
 
-local SolixUI = {}
+local NebulaUi = {}
 local TweenService = game:GetService("TweenService")
 local UserInputService = game:GetService("UserInputService")
 local HttpService = game:GetService("HttpService")
