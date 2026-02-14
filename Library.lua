@@ -1063,6 +1063,67 @@ function NebulaUi:CreateWindow(config)
                 return DropdownFrame
             end
             
+            function Section:AddTextbox(config)
+                config = config or {}
+                local TextboxName = config.Name or "Textbox"
+                local PlaceholderText = config.PlaceholderText or "Enter text..."
+                local Callback = config.Callback or function() end
+                
+                local TextboxFrame = Instance.new("Frame")
+                TextboxFrame.Name = "Textbox_" .. TextboxName
+                TextboxFrame.Size = UDim2.new(1, 0, 0, 60)
+                TextboxFrame.BackgroundColor3 = Theme.Element
+                TextboxFrame.BackgroundTransparency = 0.5
+                TextboxFrame.BorderSizePixel = 0
+                TextboxFrame.Parent = SectionFrame
+                
+                local TextboxCorner = Instance.new("UICorner")
+                TextboxCorner.CornerRadius = UDim.new(0, 3)
+                TextboxCorner.Parent = TextboxFrame
+                
+                local TextboxLabel = Instance.new("TextLabel")
+                TextboxLabel.Size = UDim2.new(1, -16, 0, 20)
+                TextboxLabel.Position = UDim2.new(0, 8, 0, 5)
+                TextboxLabel.BackgroundTransparency = 1
+                TextboxLabel.Text = TextboxName
+                TextboxLabel.TextColor3 = Theme.Text
+                TextboxLabel.TextSize = 11
+                TextboxLabel.Font = Enum.Font.Gotham
+                TextboxLabel.TextXAlignment = Enum.TextXAlignment.Left
+                TextboxLabel.Parent = TextboxFrame
+                
+                local TextboxInputFrame = Instance.new("Frame")
+                TextboxInputFrame.Size = UDim2.new(1, -16, 0, 30)
+                TextboxInputFrame.Position = UDim2.new(0, 8, 0, 25)
+                TextboxInputFrame.BackgroundColor3 = Theme.SliderBg
+                TextboxInputFrame.BorderSizePixel = 0
+                TextboxInputFrame.Parent = TextboxFrame
+                
+                local TextboxInputCorner = Instance.new("UICorner")
+                TextboxInputCorner.CornerRadius = UDim.new(0, 3)
+                TextboxInputCorner.Parent = TextboxInputFrame
+                
+                local TextboxInput = Instance.new("TextBox")
+                TextboxInput.Size = UDim2.new(1, -10, 1, 0)
+                TextboxInput.Position = UDim2.new(0, 5, 0, 0)
+                TextboxInput.BackgroundTransparency = 1
+                TextboxInput.PlaceholderText = PlaceholderText
+                TextboxInput.PlaceholderColor3 = Theme.TextDark
+                TextboxInput.Text = ""
+                TextboxInput.TextColor3 = Theme.Text
+                TextboxInput.TextSize = 11
+                TextboxInput.Font = Enum.Font.Gotham
+                TextboxInput.TextXAlignment = Enum.TextXAlignment.Left
+                TextboxInput.ClearTextOnFocus = false
+                TextboxInput.Parent = TextboxInputFrame
+                
+                TextboxInput.FocusLost:Connect(function(enterPressed)
+                    Callback(TextboxInput.Text)
+                end)
+                
+                return TextboxFrame
+            end
+            
             return Section
         end
         
