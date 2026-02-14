@@ -63,25 +63,25 @@ end
 -- Create Window
 function NebulaUi:CreateWindow(config)
     config = config or {}
-    local WindowName = config.Name or "Solix Hub"
+    local WindowName = config.Name or "Nebula Hub"
     local ToggleKey = config.ToggleKey or Enum.KeyCode.V
     local KeySystem = config.KeySystem or false
     local Key = config.Key or "1234"
     local Resizable = config.Resizable or true
     
     -- ScreenGui
-    local SolixGui = Instance.new("ScreenGui")
-    SolixGui.Name = "SolixHub_" .. HttpService:GenerateGUID(false)
-    SolixGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
-    SolixGui.ResetOnSpawn = false
+    local NebulaGui = Instance.new("ScreenGui")
+    NebulaGui.Name = "NebulaHub_" .. HttpService:GenerateGUID(false)
+    NebulaGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+    NebulaGui.ResetOnSpawn = false
     
     if gethui then
-        SolixGui.Parent = gethui()
+        NebulaGui.Parent = gethui()
     elseif syn and syn.protect_gui then
-        syn.protect_gui(SolixGui)
-        SolixGui.Parent = game.CoreGui
+        syn.protect_gui(NebulaGui)
+        NebulaGui.Parent = game.CoreGui
     else
-        SolixGui.Parent = game.CoreGui
+        NebulaGui.Parent = game.CoreGui
     end
     
     -- Key System GUI
@@ -93,7 +93,7 @@ function NebulaUi:CreateWindow(config)
     KeyFrame.BackgroundTransparency = 0.05
     KeyFrame.BorderSizePixel = 0
     KeyFrame.Visible = KeySystem
-    KeyFrame.Parent = SolixGui
+    KeyFrame.Parent = NebulaGui
     
     local KeyCorner = Instance.new("UICorner")
     KeyCorner.CornerRadius = UDim.new(0, 8)
@@ -161,7 +161,7 @@ function NebulaUi:CreateWindow(config)
     KeyClose.Parent = KeyTopBar
     
     KeyClose.MouseButton1Click:Connect(function()
-        SolixGui:Destroy()
+        NebulaGui:Destroy()
     end)
     
     KeyMinimize.MouseButton1Click:Connect(function()
@@ -262,7 +262,6 @@ function NebulaUi:CreateWindow(config)
     GetKeyButton.MouseButton1Click:Connect(function()
         StatusLabel.Text = "Opening key link..."
         StatusLabel.TextColor3 = Theme.Primary
-        -- Ici tu peux ajouter ton lien
         if setclipboard then
             setclipboard("https://your-key-link.com")
             StatusLabel.Text = "Link copied to clipboard!"
@@ -310,7 +309,7 @@ function NebulaUi:CreateWindow(config)
     MainFrame.BorderSizePixel = 0
     MainFrame.ClipsDescendants = true
     MainFrame.Visible = not KeySystem
-    MainFrame.Parent = SolixGui
+    MainFrame.Parent = NebulaGui
     
     if not KeySystem then
         Tween(MainFrame, {Size = UDim2.new(0, 780, 0, 520)}, 0.5, Enum.EasingStyle.Back)
@@ -385,7 +384,7 @@ function NebulaUi:CreateWindow(config)
     MinimizeMessage.TextSize = 11
     MinimizeMessage.Font = Enum.Font.Gotham
     MinimizeMessage.Visible = false
-    MinimizeMessage.Parent = SolixGui
+    MinimizeMessage.Parent = NebulaGui
     
     local MinimizeMsgCorner = Instance.new("UICorner")
     MinimizeMsgCorner.CornerRadius = UDim.new(0, 4)
@@ -411,7 +410,7 @@ function NebulaUi:CreateWindow(config)
     CloseButton.MouseButton1Click:Connect(function()
         Tween(MainFrame, {Size = UDim2.new(0, 0, 0, 0)}, 0.3, Enum.EasingStyle.Back)
         task.wait(0.3)
-        SolixGui:Destroy()
+        NebulaGui:Destroy()
     end)
     
     -- Sidebar
@@ -569,7 +568,6 @@ function NebulaUi:CreateWindow(config)
         end)
     end
     
-    -- Create Tab (reste du code identique...)
     function Window:CreateTab(tabName)
         local Tab = {
             Name = tabName
@@ -708,9 +706,6 @@ function NebulaUi:CreateWindow(config)
             TabContent.Visible = true
             Window.CurrentTab = Tab
         end
-        
-        -- Tab Functions (AddSection, AddToggle, AddButton, AddSlider, AddDropdown...)
-        -- [Le reste du code des fonctions reste identique au fichier précédent]
         
         function Tab:AddSection(sectionName, column)
             column = column or "left"
@@ -1077,4 +1072,4 @@ function NebulaUi:CreateWindow(config)
     return Window
 end
 
-return SolixUI
+return NebulaUi
