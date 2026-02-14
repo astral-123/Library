@@ -1,9 +1,11 @@
+-- By Astral
+
 local NebulaUi = {}
 local TweenService = game:GetService("TweenService")
 local UserInputService = game:GetService("UserInputService")
 local HttpService = game:GetService("HttpService")
 
--- Theme Colors (Purple) - MODIFIABLE PAR COLORPICKER
+-- Theme Colors (Purple)
 local Theme = {
     Background = Color3.fromRGB(15, 15, 20),
     Sidebar = Color3.fromRGB(10, 10, 15),
@@ -36,7 +38,13 @@ end
 
 local function MakeDraggable(frame, dragFrame)
     dragFrame = dragFrame or frame
-    local dragging, dragInput, dragStart, startPos
+    local dragging = false
+    local dragInput, dragStart, startPos
+    
+    local function update(input)
+        local delta = input.Position - dragStart
+        frame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+    end
     
     dragFrame.InputBegan:Connect(function(input)
         if input.UserInputType == Enum.UserInputType.MouseButton1 then
@@ -60,8 +68,7 @@ local function MakeDraggable(frame, dragFrame)
     
     UserInputService.InputChanged:Connect(function(input)
         if input == dragInput and dragging then
-            local delta = input.Position - dragStart
-            frame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+            update(input)
         end
     end)
 end
@@ -508,9 +515,10 @@ function NebulaUi:CreateWindow(config)
         ResizeCorner.CornerRadius = UDim.new(0, 3)
         ResizeCorner.Parent = ResizeHandle
         
-        -- Resize functionality
+        -- Resize functionality OPTIMISÉ
         local resizing = false
         local resizeStart, sizeStart
+        local resizeConnection
         
         ResizeHandle.InputBegan:Connect(function(input)
             if input.UserInputType == Enum.UserInputType.MouseButton1 then
@@ -523,10 +531,14 @@ function NebulaUi:CreateWindow(config)
         ResizeHandle.InputEnded:Connect(function(input)
             if input.UserInputType == Enum.UserInputType.MouseButton1 then
                 resizing = false
+                if resizeConnection then
+                    resizeConnection:Disconnect()
+                    resizeConnection = nil
+                end
             end
         end)
         
-        UserInputService.InputChanged:Connect(function(input)
+        resizeConnection = UserInputService.InputChanged:Connect(function(input)
             if resizing and input.UserInputType == Enum.UserInputType.MouseMovement then
                 local delta = input.Position - resizeStart
                 local newWidth = math.max(600, sizeStart.X + delta.X)
@@ -1010,6 +1022,7 @@ function NebulaUi:CreateWindow(config)
                 
                 local dragging = false
                 local value = Default
+                local sliderConnection
                 
                 ConfigSystem.CurrentConfig[SliderName] = value
                 
@@ -1032,10 +1045,14 @@ function NebulaUi:CreateWindow(config)
                 SliderBar.InputEnded:Connect(function(input)
                     if input.UserInputType == Enum.UserInputType.MouseButton1 then
                         dragging = false
+                        if sliderConnection then
+                            sliderConnection:Disconnect()
+                            sliderConnection = nil
+                        end
                     end
                 end)
                 
-                UserInputService.InputChanged:Connect(function(input)
+                sliderConnection = UserInputService.InputChanged:Connect(function(input)
                     if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
                         UpdateSlider(input)
                     end
@@ -1300,6 +1317,7 @@ function NebulaUi:CreateWindow(config)
                 
                 local currentKey = Default
                 local binding = false
+                local keybindConnection
                 
                 ConfigSystem.CurrentConfig[KeybindName] = currentKey.Name
                 
@@ -1309,7 +1327,7 @@ function NebulaUi:CreateWindow(config)
                     KeybindButton.TextColor3 = Theme.Primary
                 end)
                 
-                UserInputService.InputBegan:Connect(function(input, gameProcessed)
+                keybindConnection = UserInputService.InputBegan:Connect(function(input, gameProcessed)
                     if binding and input.UserInputType == Enum.UserInputType.Keyboard then
                         binding = false
                         currentKey = input.KeyCode
@@ -1323,231 +1341,6 @@ function NebulaUi:CreateWindow(config)
                 end)
                 
                 return KeybindFrame
-            end
-            
-            function Section:AddColorPicker(config)
-                config = config or {}
-                local ColorPickerName = config.Name or "ColorPicker"
-                local Default = config.Default or Color3.fromRGB(130, 70, 200)
-                local Callback = config.Callback or function() end
-                
-                local ColorPickerFrame = Instance.new("Frame")
-                ColorPickerFrame.Name = "ColorPicker_" .. ColorPickerName
-                ColorPickerFrame.Size = UDim2.new(1, 0, 0, 30)
-                ColorPickerFrame.BackgroundColor3 = Theme.Element
-                ColorPickerFrame.BackgroundTransparency = 0.5
-                ColorPickerFrame.BorderSizePixel = 0
-                ColorPickerFrame.Parent = SectionFrame
-                
-                local ColorPickerCorner = Instance.new("UICorner")
-                ColorPickerCorner.CornerRadius = UDim.new(0, 3)
-                ColorPickerCorner.Parent = ColorPickerFrame
-                
-                local ColorPickerLabel = Instance.new("TextLabel")
-                ColorPickerLabel.Size = UDim2.new(1, -35, 1, 0)
-                ColorPickerLabel.Position = UDim2.new(0, 8, 0, 0)
-                ColorPickerLabel.BackgroundTransparency = 1
-                ColorPickerLabel.Text = ColorPickerName
-                ColorPickerLabel.TextColor3 = Theme.Text
-                ColorPickerLabel.TextSize = 11
-                ColorPickerLabel.Font = Enum.Font.Gotham
-                ColorPickerLabel.TextXAlignment = Enum.TextXAlignment.Left
-                ColorPickerLabel.Parent = ColorPickerFrame
-                
-                local ColorDisplay = Instance.new("Frame")
-                ColorDisplay.Size = UDim2.new(0, 20, 0, 20)
-                ColorDisplay.Position = UDim2.new(1, -25, 0.5, -10)
-                ColorDisplay.BackgroundColor3 = Default
-                ColorDisplay.BorderSizePixel = 0
-                ColorDisplay.Parent = ColorPickerFrame
-                
-                local ColorDisplayCorner = Instance.new("UICorner")
-                ColorDisplayCorner.CornerRadius = UDim.new(0, 3)
-                ColorDisplayCorner.Parent = ColorDisplay
-                
-                local ColorDisplayStroke = Instance.new("UIStroke")
-                ColorDisplayStroke.Color = Theme.Border
-                ColorDisplayStroke.Thickness = 1
-                ColorDisplayStroke.Parent = ColorDisplay
-                
-                -- Color Picker Popup
-                local ColorPickerPopup = Instance.new("Frame")
-                ColorPickerPopup.Name = "ColorPickerPopup"
-                ColorPickerPopup.Size = UDim2.new(0, 200, 0, 230)
-                ColorPickerPopup.Position = UDim2.new(0.5, -100, 0.5, -115)
-                ColorPickerPopup.BackgroundColor3 = Theme.Background
-                ColorPickerPopup.BorderSizePixel = 0
-                ColorPickerPopup.Visible = false
-                ColorPickerPopup.ZIndex = 10
-                ColorPickerPopup.Parent = NebulaGui
-                
-                local PopupCorner = Instance.new("UICorner")
-                PopupCorner.CornerRadius = UDim.new(0, 6)
-                PopupCorner.Parent = ColorPickerPopup
-                
-                local PopupStroke = Instance.new("UIStroke")
-                PopupStroke.Color = Theme.Primary
-                PopupStroke.Thickness = 2
-                PopupStroke.Parent = ColorPickerPopup
-                
-                -- Color Canvas
-                local ColorCanvas = Instance.new("ImageButton")
-                ColorCanvas.Size = UDim2.new(1, -20, 0, 150)
-                ColorCanvas.Position = UDim2.new(0, 10, 0, 10)
-                ColorCanvas.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-                ColorCanvas.BorderSizePixel = 0
-                ColorCanvas.Image = "rbxassetid://4155801252"
-                ColorCanvas.Parent = ColorPickerPopup
-                
-                local CanvasCorner = Instance.new("UICorner")
-                CanvasCorner.CornerRadius = UDim.new(0, 4)
-                CanvasCorner.Parent = ColorCanvas
-                
-                -- Hue Slider
-                local HueSlider = Instance.new("ImageButton")
-                HueSlider.Size = UDim2.new(1, -20, 0, 15)
-                HueSlider.Position = UDim2.new(0, 10, 0, 170)
-                HueSlider.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-                HueSlider.BorderSizePixel = 0
-                HueSlider.Image = "rbxassetid://3641079629"
-                HueSlider.Parent = ColorPickerPopup
-                
-                local HueCorner = Instance.new("UICorner")
-                HueCorner.CornerRadius = UDim.new(0, 4)
-                HueCorner.Parent = HueSlider
-                
-                -- Confirm/Cancel Buttons
-                local ConfirmButton = Instance.new("TextButton")
-                ConfirmButton.Size = UDim2.new(0.48, 0, 0, 30)
-                ConfirmButton.Position = UDim2.new(0, 10, 1, -40)
-                ConfirmButton.BackgroundColor3 = Theme.Primary
-                ConfirmButton.BorderSizePixel = 0
-                ConfirmButton.Text = "Confirm"
-                ConfirmButton.TextColor3 = Theme.Text
-                ConfirmButton.TextSize = 11
-                ConfirmButton.Font = Enum.Font.GothamBold
-                ConfirmButton.Parent = ColorPickerPopup
-                
-                local ConfirmCorner = Instance.new("UICorner")
-                ConfirmCorner.CornerRadius = UDim.new(0, 4)
-                ConfirmCorner.Parent = ConfirmButton
-                
-                local CancelButton = Instance.new("TextButton")
-                CancelButton.Size = UDim2.new(0.48, 0, 0, 30)
-                CancelButton.Position = UDim2.new(0.52, 0, 1, -40)
-                CancelButton.BackgroundColor3 = Theme.Element
-                CancelButton.BorderSizePixel = 0
-                CancelButton.Text = "Cancel"
-                CancelButton.TextColor3 = Theme.Text
-                CancelButton.TextSize = 11
-                CancelButton.Font = Enum.Font.GothamBold
-                CancelButton.Parent = ColorPickerPopup
-                
-                local CancelCorner = Instance.new("UICorner")
-                CancelCorner.CornerRadius = UDim.new(0, 4)
-                CancelCorner.Parent = CancelButton
-                
-                local currentColor = Default
-                local hue, sat, val = 0, 1, 1
-                
-                ConfigSystem.CurrentConfig[ColorPickerName] = {currentColor.R * 255, currentColor.G * 255, currentColor.B * 255}
-                
-                local function UpdateColor(newColor)
-                    currentColor = newColor
-                    ColorDisplay.BackgroundColor3 = newColor
-                    ConfigSystem.CurrentConfig[ColorPickerName] = {newColor.R * 255, newColor.G * 255, newColor.B * 255}
-                    Callback(newColor)
-                end
-                
-                local function UpdateCanvas()
-                    ColorCanvas.BackgroundColor3 = Color3.fromHSV(hue, 1, 1)
-                end
-                
-                ColorCanvas.MouseButton1Down:Connect(function()
-                    local dragging = true
-                    local function update()
-                        local pos = ColorCanvas.AbsolutePosition
-                        local size = ColorCanvas.AbsoluteSize
-                        local mouse = UserInputService:GetMouseLocation()
-                        
-                        sat = math.clamp((mouse.X - pos.X) / size.X, 0, 1)
-                        val = 1 - math.clamp((mouse.Y - pos.Y) / size.Y, 0, 1)
-                        
-                        local newColor = Color3.fromHSV(hue, sat, val)
-                        ColorDisplay.BackgroundColor3 = newColor
-                    end
-                    
-                    update()
-                    
-                    local connection
-                    connection = UserInputService.InputEnded:Connect(function(input)
-                        if input.UserInputType == Enum.UserInputType.MouseButton1 then
-                            dragging = false
-                            connection:Disconnect()
-                        end
-                    end)
-                    
-                    UserInputService.InputChanged:Connect(function()
-                        if dragging then
-                            update()
-                        end
-                    end)
-                end)
-                
-                HueSlider.MouseButton1Down:Connect(function()
-                    local dragging = true
-                    local function update()
-                        local pos = HueSlider.AbsolutePosition
-                        local size = HueSlider.AbsoluteSize
-                        local mouse = UserInputService:GetMouseLocation()
-                        
-                        hue = math.clamp((mouse.X - pos.X) / size.X, 0, 1)
-                        UpdateCanvas()
-                        
-                        local newColor = Color3.fromHSV(hue, sat, val)
-                        ColorDisplay.BackgroundColor3 = newColor
-                    end
-                    
-                    update()
-                    
-                    local connection
-                    connection = UserInputService.InputEnded:Connect(function(input)
-                        if input.UserInputType == Enum.UserInputType.MouseButton1 then
-                            dragging = false
-                            connection:Disconnect()
-                        end
-                    end)
-                    
-                    UserInputService.InputChanged:Connect(function()
-                        if dragging then
-                            update()
-                        end
-                    end)
-                end)
-                
-                local ColorPickerButton = Instance.new("TextButton")
-                ColorPickerButton.Size = UDim2.new(1, 0, 1, 0)
-                ColorPickerButton.BackgroundTransparency = 1
-                ColorPickerButton.Text = ""
-                ColorPickerButton.Parent = ColorPickerFrame
-                
-                ColorPickerButton.MouseButton1Click:Connect(function()
-                    ColorPickerPopup.Visible = true
-                end)
-                
-                ConfirmButton.MouseButton1Click:Connect(function()
-                    UpdateColor(ColorDisplay.BackgroundColor3)
-                    ColorPickerPopup.Visible = false
-                end)
-                
-                CancelButton.MouseButton1Click:Connect(function()
-                    ColorDisplay.BackgroundColor3 = currentColor
-                    ColorPickerPopup.Visible = false
-                end)
-                
-                MakeDraggable(ColorPickerPopup)
-                
-                return ColorPickerFrame
             end
             
             return Section
