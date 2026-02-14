@@ -1,6 +1,6 @@
 -- By Astral
 
-local NebulaUi = {}
+local NebulaUI = {}
 local TweenService = game:GetService("TweenService")
 local UserInputService = game:GetService("UserInputService")
 local HttpService = game:GetService("HttpService")
@@ -24,7 +24,7 @@ local Theme = {
 -- Config System
 local ConfigSystem = {
     CurrentConfig = {},
-    SavedConfigs = {}
+    Flags = {}
 }
 
 -- Utility Functions
@@ -38,13 +38,7 @@ end
 
 local function MakeDraggable(frame, dragFrame)
     dragFrame = dragFrame or frame
-    local dragging = false
-    local dragInput, dragStart, startPos
-    
-    local function update(input)
-        local delta = input.Position - dragStart
-        frame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
-    end
+    local dragging, dragInput, dragStart, startPos
     
     dragFrame.InputBegan:Connect(function(input)
         if input.UserInputType == Enum.UserInputType.MouseButton1 then
@@ -68,18 +62,19 @@ local function MakeDraggable(frame, dragFrame)
     
     UserInputService.InputChanged:Connect(function(input)
         if input == dragInput and dragging then
-            update(input)
+            local delta = input.Position - dragStart
+            frame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
         end
     end)
 end
 
 -- Create Window
-function NebulaUi:CreateWindow(config)
+function NebulaUI:CreateWindow(config)
     config = config or {}
     local WindowName = config.Name or "Nebula Hub"
     local ToggleKey = config.ToggleKey or Enum.KeyCode.V
     local KeySystem = config.KeySystem or false
-    local Key = config.Key or "1234"
+    local Key = config.Key or "NebulaHub2024"
     local Resizable = config.Resizable or true
     
     -- ScreenGui
@@ -96,6 +91,19 @@ function NebulaUi:CreateWindow(config)
     else
         NebulaGui.Parent = game.CoreGui
     end
+    
+    -- Notification Container
+    local NotificationContainer = Instance.new("Frame")
+    NotificationContainer.Name = "NotificationContainer"
+    NotificationContainer.Size = UDim2.new(0, 300, 1, 0)
+    NotificationContainer.Position = UDim2.new(1, -310, 0, 10)
+    NotificationContainer.BackgroundTransparency = 1
+    NotificationContainer.Parent = NebulaGui
+    
+    local NotificationLayout = Instance.new("UIListLayout")
+    NotificationLayout.SortOrder = Enum.SortOrder.LayoutOrder
+    NotificationLayout.Padding = UDim.new(0, 10)
+    NotificationLayout.Parent = NotificationContainer
     
     -- Key System GUI
     local KeyFrame = Instance.new("Frame")
@@ -515,10 +523,9 @@ function NebulaUi:CreateWindow(config)
         ResizeCorner.CornerRadius = UDim.new(0, 3)
         ResizeCorner.Parent = ResizeHandle
         
-        -- Resize functionality OPTIMISÉ
+        -- Resize functionality
         local resizing = false
         local resizeStart, sizeStart
-        local resizeConnection
         
         ResizeHandle.InputBegan:Connect(function(input)
             if input.UserInputType == Enum.UserInputType.MouseButton1 then
@@ -531,14 +538,10 @@ function NebulaUi:CreateWindow(config)
         ResizeHandle.InputEnded:Connect(function(input)
             if input.UserInputType == Enum.UserInputType.MouseButton1 then
                 resizing = false
-                if resizeConnection then
-                    resizeConnection:Disconnect()
-                    resizeConnection = nil
-                end
             end
         end)
         
-        resizeConnection = UserInputService.InputChanged:Connect(function(input)
+        UserInputService.InputChanged:Connect(function(input)
             if resizing and input.UserInputType == Enum.UserInputType.MouseMovement then
                 local delta = input.Position - resizeStart
                 local newWidth = math.max(600, sizeStart.X + delta.X)
@@ -552,8 +555,9 @@ function NebulaUi:CreateWindow(config)
     MakeDraggable(MainFrame, TopBar)
     
     -- Toggle UI
+    local currentToggleKey = ToggleKey
     UserInputService.InputBegan:Connect(function(input, gameProcessed)
-        if not gameProcessed and input.KeyCode == ToggleKey then
+        if not gameProcessed and input.KeyCode == currentToggleKey then
             if isMinimized then
                 isMinimized = false
                 MinimizeMessage.Visible = false
@@ -574,8 +578,148 @@ function NebulaUi:CreateWindow(config)
     local Window = {
         Tabs = {},
         CurrentTab = nil,
-        SettingsTab = nil
+        ToggleKey = currentToggleKey
     }
+    
+    -- Notification Function
+    function Window:Notification(config)
+        config = config or {}
+        local NotifTitle = config.Title or "Notification"
+        local NotifText = config.Text or "This is a notification"
+        local Duration = config.Duration or 3
+        
+        local NotifFrame = Instance.new("Frame")
+        NotifFrame.Size = UDim2.new(1, 0, 0, 0)
+        NotifFrame.BackgroundColor3 = Theme.Background
+        NotifFrame.BackgroundTransparency = 0.1
+        NotifFrame.BorderSizePixel = 0
+        NotifFrame.ClipsDescendants = true
+        NotifFrame.Parent = NotificationContainer
+        
+        local NotifCorner = Instance.new("UICorner")
+        NotifCorner.CornerRadius = UDim.new(0, 6)
+        NotifCorner.Parent = NotifFrame
+        
+        local NotifStroke = Instance.new("UIStroke")
+        NotifStroke.Color = Theme.Primary
+        NotifStroke.Thickness = 1
+        NotifStroke.Parent = NotifFrame
+        
+        local NotifLayout = Instance.new("UIListLayout")
+        NotifLayout.SortOrder = Enum.SortOrder.LayoutOrder
+        NotifLayout.Padding = UDim.new(0, 5)
+        NotifLayout.Parent = NotifFrame
+        
+        local NotifPadding = Instance.new("UIPadding")
+        NotifPadding.PaddingTop = UDim.new(0, 10)
+        NotifPadding.PaddingBottom = UDim.new(0, 10)
+        NotifPadding.PaddingLeft = UDim.new(0, 10)
+        NotifPadding.PaddingRight = UDim.new(0, 10)
+        NotifPadding.Parent = NotifFrame
+        
+        local NotifTitleLabel = Instance.new("TextLabel")
+        NotifTitleLabel.Size = UDim2.new(1, 0, 0, 18)
+        NotifTitleLabel.BackgroundTransparency = 1
+        NotifTitleLabel.Text = NotifTitle
+        NotifTitleLabel.TextColor3 = Theme.Text
+        NotifTitleLabel.TextSize = 13
+        NotifTitleLabel.Font = Enum.Font.GothamBold
+        NotifTitleLabel.TextXAlignment = Enum.TextXAlignment.Left
+        NotifTitleLabel.Parent = NotifFrame
+        
+        local NotifTextLabel = Instance.new("TextLabel")
+        NotifTextLabel.Size = UDim2.new(1, 0, 0, 0)
+        NotifTextLabel.BackgroundTransparency = 1
+        NotifTextLabel.Text = NotifText
+        NotifTextLabel.TextColor3 = Theme.TextDark
+        NotifTextLabel.TextSize = 11
+        NotifTextLabel.Font = Enum.Font.Gotham
+        NotifTextLabel.TextXAlignment = Enum.TextXAlignment.Left
+        NotifTextLabel.TextWrapped = true
+        NotifTextLabel.TextYAlignment = Enum.TextYAlignment.Top
+        NotifTextLabel.AutomaticSize = Enum.AutomaticSize.Y
+        NotifTextLabel.Parent = NotifFrame
+        
+        NotifFrame.Size = UDim2.new(1, 0, 0, NotifTitleLabel.AbsoluteSize.Y + NotifTextLabel.AbsoluteSize.Y + 25)
+        
+        Tween(NotifFrame, {BackgroundTransparency = 0.1}, 0.3)
+        
+        task.delay(Duration, function()
+            Tween(NotifFrame, {BackgroundTransparency = 1}, 0.3)
+            Tween(NotifStroke, {Transparency = 1}, 0.3)
+            task.wait(0.3)
+            NotifFrame:Destroy()
+        end)
+    end
+    
+    -- Save/Load Config Functions
+    function Window:SaveConfig(configName)
+        configName = configName or "DefaultConfig"
+        local configData = HttpService:JSONEncode(ConfigSystem.Flags)
+        
+        if writefile then
+            writefile("NebulaHub_" .. configName .. ".json", configData)
+            Window:Notification({
+                Title = "Config Saved",
+                Text = "Config '" .. configName .. "' saved successfully!",
+                Duration = 3
+            })
+            return true
+        else
+            Window:Notification({
+                Title = "Error",
+                Text = "writefile not supported!",
+                Duration = 3
+            })
+            return false
+        end
+    end
+    
+    function Window:LoadConfig(configName)
+        configName = configName or "DefaultConfig"
+        
+        if readfile and isfile and isfile("NebulaHub_" .. configName .. ".json") then
+            local success, configData = pcall(function()
+                return HttpService:JSONDecode(readfile("NebulaHub_" .. configName .. ".json"))
+            end)
+            
+            if success then
+                for flag, value in pairs(configData) do
+                    if ConfigSystem.Flags[flag] then
+                        ConfigSystem.Flags[flag]:Set(value)
+                    end
+                end
+                Window:Notification({
+                    Title = "Config Loaded",
+                    Text = "Config '" .. configName .. "' loaded successfully!",
+                    Duration = 3
+                })
+                return true
+            end
+        else
+            Window:Notification({
+                Title = "Error",
+                Text = "Config not found!",
+                Duration = 3
+            })
+        end
+        return false
+    end
+    
+    function Window:GetConfigList()
+        local configs = {}
+        
+        if listfiles then
+            for _, file in ipairs(listfiles()) do
+                local configName = file:match("NebulaHub_(.+)%.json")
+                if configName then
+                    table.insert(configs, configName)
+                end
+            end
+        end
+        
+        return configs
+    end
     
     -- Show Main UI after key validation (if key system is enabled)
     if KeySystem then
@@ -587,10 +731,14 @@ function NebulaUi:CreateWindow(config)
         end)
     end
     
+    -- Create Tab
     function Window:CreateTab(tabName)
+        -- Si c'est le tab Settings, on le met en dernier
+        local isSettings = (tabName == "Settings")
+        
         local Tab = {
             Name = tabName,
-            IsSettings = (tabName == "Settings")
+            IsSettings = isSettings
         }
         
         -- Tab Button
@@ -601,7 +749,7 @@ function NebulaUi:CreateWindow(config)
         TabButton.BackgroundTransparency = 1
         TabButton.BorderSizePixel = 0
         TabButton.Text = ""
-        TabButton.LayoutOrder = Tab.IsSettings and 9999 or #Window.Tabs
+        TabButton.LayoutOrder = isSettings and 9999 or #Window.Tabs
         TabButton.Parent = TabList
         
         local TabIndicator = Instance.new("Frame")
@@ -717,10 +865,6 @@ function NebulaUi:CreateWindow(config)
         Tab.Label = TabLabel
         Tab.Indicator = TabIndicator
         
-        if Tab.IsSettings then
-            Window.SettingsTab = Tab
-        end
-        
         table.insert(Window.Tabs, Tab)
         
         -- Auto-select first tab
@@ -732,6 +876,76 @@ function NebulaUi:CreateWindow(config)
             Window.CurrentTab = Tab
         end
         
+        -- Si c'est le tab Settings, on ajoute automatiquement les sections
+        if isSettings then
+            task.defer(function()
+                local SettingsLeft = Tab:AddSection("UI Settings", "left")
+                
+                SettingsLeft:AddKeybind({
+                    Name = "Toggle UI",
+                    Default = currentToggleKey,
+                    Flag = "ToggleKey",
+                    Callback = function(key)
+                        currentToggleKey = key
+                        Window.ToggleKey = key
+                        MinimizeMessage.Text = "Press " .. key.Name .. " to open"
+                    end
+                })
+                
+                local SettingsRight = Tab:AddSection("Config", "right")
+                
+                local configNameInput = ""
+                
+                SettingsRight:AddInput({
+                    Name = "Config Name",
+                    PlaceholderText = "Enter config name...",
+                    Flag = "ConfigName",
+                    Callback = function(text)
+                        configNameInput = text
+                    end
+                })
+                
+                SettingsRight:AddButton({
+                    Name = "Save Config",
+                    Callback = function()
+                        if configNameInput ~= "" then
+                            Window:SaveConfig(configNameInput)
+                        else
+                            Window:Notification({
+                                Title = "Error",
+                                Text = "Please enter a config name!",
+                                Duration = 3
+                            })
+                        end
+                    end
+                })
+                
+                local ConfigDropdown = SettingsRight:AddDropdown({
+                    Name = "Load Config",
+                    Options = Window:GetConfigList(),
+                    Default = "Select Config",
+                    Callback = function(value)
+                        if value ~= "Select Config" then
+                            Window:LoadConfig(value)
+                        end
+                    end
+                })
+                
+                SettingsRight:AddButton({
+                    Name = "Refresh Configs",
+                    Callback = function()
+                        -- Refresh dropdown options
+                        Window:Notification({
+                            Title = "Refreshed",
+                            Text = "Config list refreshed!",
+                            Duration = 2
+                        })
+                    end
+                })
+            end)
+        end
+        
+        -- AddSection Function
         function Tab:AddSection(sectionName, column)
             column = column or "left"
             local parentColumn = column == "left" and LeftColumn or RightColumn
@@ -762,15 +976,15 @@ function NebulaUi:CreateWindow(config)
             
             local Section = {Frame = SectionFrame, Column = column}
             
+            -- AddLabel
             function Section:AddLabel(config)
                 config = config or {}
                 local LabelText = config.Text or "Label"
                 
                 local LabelFrame = Instance.new("Frame")
-                LabelFrame.Name = "Label_" .. LabelText
-                LabelFrame.Size = UDim2.new(1, 0, 0, 25)
+                LabelFrame.Name = "Label"
+                LabelFrame.Size = UDim2.new(1, 0, 0, 20)
                 LabelFrame.BackgroundTransparency = 1
-                LabelFrame.BorderSizePixel = 0
                 LabelFrame.Parent = SectionFrame
                 
                 local Label = Instance.new("TextLabel")
@@ -785,16 +999,21 @@ function NebulaUi:CreateWindow(config)
                 Label.TextWrapped = true
                 Label.Parent = LabelFrame
                 
-                return LabelFrame
+                return {
+                    SetText = function(self, text)
+                        Label.Text = text
+                    end
+                }
             end
             
+            -- AddParagraph
             function Section:AddParagraph(config)
                 config = config or {}
                 local Title = config.Title or "Paragraph"
                 local Content = config.Content or "Content"
                 
                 local ParagraphFrame = Instance.new("Frame")
-                ParagraphFrame.Name = "Paragraph_" .. Title
+                ParagraphFrame.Name = "Paragraph"
                 ParagraphFrame.Size = UDim2.new(1, 0, 0, 0)
                 ParagraphFrame.BackgroundColor3 = Theme.Element
                 ParagraphFrame.BackgroundTransparency = 0.5
@@ -841,13 +1060,20 @@ function NebulaUi:CreateWindow(config)
                 ParagraphContent.AutomaticSize = Enum.AutomaticSize.Y
                 ParagraphContent.Parent = ParagraphFrame
                 
-                return ParagraphFrame
+                return {
+                    SetText = function(self, title, content)
+                        ParagraphTitle.Text = title
+                        ParagraphContent.Text = content
+                    end
+                }
             end
             
+            -- AddToggle
             function Section:AddToggle(config)
                 config = config or {}
                 local ToggleName = config.Name or "Toggle"
                 local DefaultValue = config.Default or false
+                local Flag = config.Flag
                 local Callback = config.Callback or function() end
                 
                 local ToggleFrame = Instance.new("Frame")
@@ -887,7 +1113,23 @@ function NebulaUi:CreateWindow(config)
                 
                 local toggled = DefaultValue
                 
-                ConfigSystem.CurrentConfig[ToggleName] = toggled
+                local ToggleObj = {
+                    Value = toggled,
+                    Set = function(self, value)
+                        toggled = value
+                        self.Value = value
+                        if toggled then
+                            Tween(ToggleButton, {BackgroundColor3 = Theme.Toggle}, 0.2)
+                        else
+                            Tween(ToggleButton, {BackgroundColor3 = Theme.ToggleOff}, 0.2)
+                        end
+                        Callback(toggled)
+                    end
+                }
+                
+                if Flag then
+                    ConfigSystem.Flags[Flag] = ToggleObj
+                end
                 
                 local function UpdateToggle()
                     if toggled then
@@ -897,7 +1139,7 @@ function NebulaUi:CreateWindow(config)
                     else
                         Tween(ToggleButton, {BackgroundColor3 = Theme.ToggleOff}, 0.2)
                     end
-                    ConfigSystem.CurrentConfig[ToggleName] = toggled
+                    ToggleObj.Value = toggled
                     Callback(toggled)
                 end
                 
@@ -913,9 +1155,10 @@ function NebulaUi:CreateWindow(config)
                 end)
                 
                 UpdateToggle()
-                return ToggleFrame
+                return ToggleObj
             end
             
+            -- AddButton
             function Section:AddButton(config)
                 config = config or {}
                 local ButtonName = config.Name or "Button"
@@ -955,12 +1198,14 @@ function NebulaUi:CreateWindow(config)
                 return ButtonFrame
             end
             
+            -- AddSlider
             function Section:AddSlider(config)
                 config = config or {}
                 local SliderName = config.Name or "Slider"
                 local Min = config.Min or 0
                 local Max = config.Max or 100
                 local Default = config.Default or 50
+                local Flag = config.Flag
                 local Callback = config.Callback or function() end
                 
                 local SliderFrame = Instance.new("Frame")
@@ -1022,16 +1267,29 @@ function NebulaUi:CreateWindow(config)
                 
                 local dragging = false
                 local value = Default
-                local sliderConnection
                 
-                ConfigSystem.CurrentConfig[SliderName] = value
+                local SliderObj = {
+                    Value = value,
+                    Set = function(self, val)
+                        value = math.clamp(val, Min, Max)
+                        self.Value = value
+                        SliderValue.Text = tostring(value)
+                        local pos = (value - Min) / (Max - Min)
+                        SliderFill.Size = UDim2.new(pos, 0, 1, 0)
+                        Callback(value)
+                    end
+                }
+                
+                if Flag then
+                    ConfigSystem.Flags[Flag] = SliderObj
+                end
                 
                 local function UpdateSlider(input)
                     local pos = math.clamp((input.Position.X - SliderBar.AbsolutePosition.X) / SliderBar.AbsoluteSize.X, 0, 1)
                     value = math.floor(Min + (Max - Min) * pos)
                     SliderValue.Text = tostring(value)
                     Tween(SliderFill, {Size = UDim2.new(pos, 0, 1, 0)}, 0.1)
-                    ConfigSystem.CurrentConfig[SliderName] = value
+                    SliderObj.Value = value
                     Callback(value)
                 end
                 
@@ -1045,27 +1303,25 @@ function NebulaUi:CreateWindow(config)
                 SliderBar.InputEnded:Connect(function(input)
                     if input.UserInputType == Enum.UserInputType.MouseButton1 then
                         dragging = false
-                        if sliderConnection then
-                            sliderConnection:Disconnect()
-                            sliderConnection = nil
-                        end
                     end
                 end)
                 
-                sliderConnection = UserInputService.InputChanged:Connect(function(input)
+                UserInputService.InputChanged:Connect(function(input)
                     if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
                         UpdateSlider(input)
                     end
                 end)
                 
-                return SliderFrame
+                return SliderObj
             end
             
+            -- AddDropdown
             function Section:AddDropdown(config)
                 config = config or {}
                 local DropdownName = config.Name or "Dropdown"
                 local Options = config.Options or {"Option 1", "Option 2"}
                 local Default = config.Default or Options[1]
+                local Flag = config.Flag
                 local Callback = config.Callback or function() end
                 
                 local DropdownFrame = Instance.new("Frame")
@@ -1133,55 +1389,58 @@ function NebulaUi:CreateWindow(config)
                 local opened = false
                 local selected = Default
                 
-                ConfigSystem.CurrentConfig[DropdownName] = selected
-                
-                local Dropdown = {
-                    Options = Options,
-                    AddOption = function(self, option)
-                        table.insert(self.Options, option)
-                        
-                        local OptionButton = Instance.new("TextButton")
-                        OptionButton.Size = UDim2.new(1, 0, 0, 24)
-                        OptionButton.BackgroundColor3 = Theme.SliderBg
-                        OptionButton.BorderSizePixel = 0
-                        OptionButton.Text = option
-                        OptionButton.TextColor3 = Theme.Text
-                        OptionButton.TextSize = 10
-                        OptionButton.Font = Enum.Font.Gotham
-                        OptionButton.Parent = DropdownList
-                        
-                        local OptionCorner = Instance.new("UICorner")
-                        OptionCorner.CornerRadius = UDim.new(0, 3)
-                        OptionCorner.Parent = OptionButton
-                        
-                        OptionButton.MouseButton1Click:Connect(function()
-                            selected = option
-                            DropdownButton.Text = option
-                            opened = false
-                            Tween(DropdownFrame, {Size = UDim2.new(1, 0, 0, 30)}, 0.2, Enum.EasingStyle.Quart)
-                            Tween(DropdownArrow, {Rotation = 0}, 0.2)
-                            ConfigSystem.CurrentConfig[DropdownName] = selected
-                            Callback(option)
-                        end)
-                        
-                        OptionButton.MouseEnter:Connect(function()
-                            Tween(OptionButton, {BackgroundColor3 = Theme.Primary}, 0.15)
-                        end)
-                        
-                        OptionButton.MouseLeave:Connect(function()
-                            Tween(OptionButton, {BackgroundColor3 = Theme.SliderBg}, 0.15)
-                        end)
+                local DropdownObj = {
+                    Value = selected,
+                    Set = function(self, value)
+                        selected = value
+                        self.Value = value
+                        DropdownButton.Text = value
+                        Callback(value)
                     end
                 }
                 
+                if Flag then
+                    ConfigSystem.Flags[Flag] = DropdownObj
+                end
+                
                 for i, option in ipairs(Options) do
-                    Dropdown:AddOption(option)
+                    local OptionButton = Instance.new("TextButton")
+                    OptionButton.Size = UDim2.new(1, 0, 0, 24)
+                    OptionButton.BackgroundColor3 = Theme.SliderBg
+                    OptionButton.BorderSizePixel = 0
+                    OptionButton.Text = option
+                    OptionButton.TextColor3 = Theme.Text
+                    OptionButton.TextSize = 10
+                    OptionButton.Font = Enum.Font.Gotham
+                    OptionButton.Parent = DropdownList
+                    
+                    local OptionCorner = Instance.new("UICorner")
+                    OptionCorner.CornerRadius = UDim.new(0, 3)
+                    OptionCorner.Parent = OptionButton
+                    
+                    OptionButton.MouseButton1Click:Connect(function()
+                        selected = option
+                        DropdownButton.Text = option
+                        opened = false
+                        Tween(DropdownFrame, {Size = UDim2.new(1, 0, 0, 30)}, 0.2, Enum.EasingStyle.Quart)
+                        Tween(DropdownArrow, {Rotation = 0}, 0.2)
+                        DropdownObj.Value = selected
+                        Callback(option)
+                    end)
+                    
+                    OptionButton.MouseEnter:Connect(function()
+                        Tween(OptionButton, {BackgroundColor3 = Theme.Primary}, 0.15)
+                    end)
+                    
+                    OptionButton.MouseLeave:Connect(function()
+                        Tween(OptionButton, {BackgroundColor3 = Theme.SliderBg}, 0.15)
+                    end)
                 end
                 
                 DropdownButton.MouseButton1Click:Connect(function()
                     opened = not opened
                     if opened then
-                        local height = 35 + (#Dropdown.Options * 26)
+                        local height = 35 + (#Options * 26)
                         Tween(DropdownFrame, {Size = UDim2.new(1, 0, 0, height)}, 0.2, Enum.EasingStyle.Quart)
                         Tween(DropdownArrow, {Rotation = 180}, 0.2)
                     else
@@ -1190,91 +1449,114 @@ function NebulaUi:CreateWindow(config)
                     end
                 end)
                 
-                return Dropdown
+                return DropdownObj
             end
             
-            function Section:AddTextbox(config)
+            -- AddTextBox
+            function Section:AddTextBox(config)
                 config = config or {}
-                local TextboxName = config.Name or "Textbox"
-                local PlaceholderText = config.PlaceholderText or "Enter text..."
+                local TextBoxName = config.Name or "TextBox"
+                local PlaceholderText = config.Placeholder or "Enter text..."
+                local DefaultText = config.Default or ""
+                local Flag = config.Flag
                 local Callback = config.Callback or function() end
                 
-                local TextboxFrame = Instance.new("Frame")
-                TextboxFrame.Name = "Textbox_" .. TextboxName
-                TextboxFrame.Size = UDim2.new(1, 0, 0, 60)
-                TextboxFrame.BackgroundColor3 = Theme.Element
-                TextboxFrame.BackgroundTransparency = 0.5
-                TextboxFrame.BorderSizePixel = 0
-                TextboxFrame.Parent = SectionFrame
+                local TextBoxFrame = Instance.new("Frame")
+                TextBoxFrame.Name = "TextBox_" .. TextBoxName
+                TextBoxFrame.Size = UDim2.new(1, 0, 0, 35)
+                TextBoxFrame.BackgroundColor3 = Theme.Element
+                TextBoxFrame.BackgroundTransparency = 0.5
+                TextBoxFrame.BorderSizePixel = 0
+                TextBoxFrame.Parent = SectionFrame
                 
-                local TextboxCorner = Instance.new("UICorner")
-                TextboxCorner.CornerRadius = UDim.new(0, 3)
-                TextboxCorner.Parent = TextboxFrame
+                local TextBoxCorner = Instance.new("UICorner")
+                TextBoxCorner.CornerRadius = UDim.new(0, 3)
+                TextBoxCorner.Parent = TextBoxFrame
                 
-                local TextboxLabel = Instance.new("TextLabel")
-                TextboxLabel.Size = UDim2.new(1, -16, 0, 20)
-                TextboxLabel.Position = UDim2.new(0, 8, 0, 5)
-                TextboxLabel.BackgroundTransparency = 1
-                TextboxLabel.Text = TextboxName
-                TextboxLabel.TextColor3 = Theme.Text
-                TextboxLabel.TextSize = 11
-                TextboxLabel.Font = Enum.Font.Gotham
-                TextboxLabel.TextXAlignment = Enum.TextXAlignment.Left
-                TextboxLabel.Parent = TextboxFrame
+                local TextBoxLabel = Instance.new("TextLabel")
+                TextBoxLabel.Size = UDim2.new(0, 100, 1, 0)
+                TextBoxLabel.Position = UDim2.new(0, 8, 0, 0)
+                TextBoxLabel.BackgroundTransparency = 1
+                TextBoxLabel.Text = TextBoxName
+                TextBoxLabel.TextColor3 = Theme.Text
+                TextBoxLabel.TextSize = 11
+                TextBoxLabel.Font = Enum.Font.Gotham
+                TextBoxLabel.TextXAlignment = Enum.TextXAlignment.Left
+                TextBoxLabel.Parent = TextBoxFrame
                 
-                local TextboxInputFrame = Instance.new("Frame")
-                TextboxInputFrame.Size = UDim2.new(1, -16, 0, 30)
-                TextboxInputFrame.Position = UDim2.new(0, 8, 0, 25)
-                TextboxInputFrame.BackgroundColor3 = Theme.SliderBg
-                TextboxInputFrame.BorderSizePixel = 0
-                TextboxInputFrame.Parent = TextboxFrame
+                local TextBoxInput = Instance.new("TextBox")
+                TextBoxInput.Size = UDim2.new(1, -115, 0, 25)
+                TextBoxInput.Position = UDim2.new(0, 105, 0, 5)
+                TextBoxInput.BackgroundColor3 = Theme.SliderBg
+                TextBoxInput.BorderSizePixel = 0
+                TextBoxInput.PlaceholderText = PlaceholderText
+                TextBoxInput.PlaceholderColor3 = Theme.TextDark
+                TextBoxInput.Text = DefaultText
+                TextBoxInput.TextColor3 = Theme.Text
+                TextBoxInput.TextSize = 10
+                TextBoxInput.Font = Enum.Font.Gotham
+                TextBoxInput.TextXAlignment = Enum.TextXAlignment.Left
+                TextBoxInput.ClearTextOnFocus = false
+                TextBoxInput.Parent = TextBoxFrame
                 
-                local TextboxInputCorner = Instance.new("UICorner")
-                TextboxInputCorner.CornerRadius = UDim.new(0, 3)
-                TextboxInputCorner.Parent = TextboxInputFrame
+                local TextBoxInputCorner = Instance.new("UICorner")
+                TextBoxInputCorner.CornerRadius = UDim.new(0, 3)
+                TextBoxInputCorner.Parent = TextBoxInput
                 
-                local TextboxInput = Instance.new("TextBox")
-                TextboxInput.Size = UDim2.new(1, -10, 1, 0)
-                TextboxInput.Position = UDim2.new(0, 5, 0, 0)
-                TextboxInput.BackgroundTransparency = 1
-                TextboxInput.PlaceholderText = PlaceholderText
-                TextboxInput.PlaceholderColor3 = Theme.TextDark
-                TextboxInput.Text = ""
-                TextboxInput.TextColor3 = Theme.Text
-                TextboxInput.TextSize = 11
-                TextboxInput.Font = Enum.Font.Gotham
-                TextboxInput.TextXAlignment = Enum.TextXAlignment.Left
-                TextboxInput.ClearTextOnFocus = false
-                TextboxInput.Parent = TextboxInputFrame
+                local TextBoxPadding = Instance.new("UIPadding")
+                TextBoxPadding.PaddingLeft = UDim.new(0, 8)
+                TextBoxPadding.PaddingRight = UDim.new(0, 8)
+                TextBoxPadding.Parent = TextBoxInput
                 
-                ConfigSystem.CurrentConfig[TextboxName] = ""
+                local TextBoxObj = {
+                    Value = DefaultText,
+                    Set = function(self, text)
+                        TextBoxInput.Text = text
+                        self.Value = text
+                        Callback(text, false)
+                    end
+                }
                 
-                TextboxInput.FocusLost:Connect(function(enterPressed)
-                    ConfigSystem.CurrentConfig[TextboxName] = TextboxInput.Text
-                    Callback(TextboxInput.Text)
+                if Flag then
+                    ConfigSystem.Flags[Flag] = TextBoxObj
+                end
+                
+                TextBoxInput.FocusLost:Connect(function(enterPressed)
+                    TextBoxObj.Value = TextBoxInput.Text
+                    Callback(TextBoxInput.Text, enterPressed)
                 end)
                 
-                return TextboxFrame
+                TextBoxInput.Focused:Connect(function()
+                    Tween(TextBoxInput, {BackgroundColor3 = Theme.Primary}, 0.2)
+                end)
+                
+                TextBoxInput.FocusLost:Connect(function()
+                    Tween(TextBoxInput, {BackgroundColor3 = Theme.SliderBg}, 0.2)
+                end)
+                
+                return TextBoxObj
             end
             
+            -- AddInput (Alias pour AddTextBox)
             function Section:AddInput(config)
                 config = config or {}
-                local InputName = config.Name or "Input"
-                local Default = config.Default or ""
-                local PlaceholderText = config.PlaceholderText or "Type here..."
-                local Callback = config.Callback or function() end
-                
-                return Section:AddTextbox({
-                    Name = InputName,
-                    PlaceholderText = PlaceholderText,
-                    Callback = Callback
+                config.Name = config.Name or "Input"
+                config.PlaceholderText = config.PlaceholderText or "Enter text..."
+                return Section:AddTextBox({
+                    Name = config.Name,
+                    Placeholder = config.PlaceholderText,
+                    Default = config.Default or "",
+                    Flag = config.Flag,
+                    Callback = config.Callback
                 })
             end
             
+            -- AddKeybind
             function Section:AddKeybind(config)
                 config = config or {}
                 local KeybindName = config.Name or "Keybind"
                 local Default = config.Default or Enum.KeyCode.E
+                local Flag = config.Flag
                 local Callback = config.Callback or function() end
                 
                 local KeybindFrame = Instance.new("Frame")
@@ -1317,9 +1599,20 @@ function NebulaUi:CreateWindow(config)
                 
                 local currentKey = Default
                 local binding = false
-                local keybindConnection
                 
-                ConfigSystem.CurrentConfig[KeybindName] = currentKey.Name
+                local KeybindObj = {
+                    Value = currentKey,
+                    Set = function(self, key)
+                        currentKey = key
+                        self.Value = key
+                        KeybindButton.Text = key.Name
+                        Callback(key)
+                    end
+                }
+                
+                if Flag then
+                    ConfigSystem.Flags[Flag] = KeybindObj
+                end
                 
                 KeybindButton.MouseButton1Click:Connect(function()
                     binding = true
@@ -1327,20 +1620,20 @@ function NebulaUi:CreateWindow(config)
                     KeybindButton.TextColor3 = Theme.Primary
                 end)
                 
-                keybindConnection = UserInputService.InputBegan:Connect(function(input, gameProcessed)
+                UserInputService.InputBegan:Connect(function(input, gameProcessed)
                     if binding and input.UserInputType == Enum.UserInputType.Keyboard then
                         binding = false
                         currentKey = input.KeyCode
                         KeybindButton.Text = currentKey.Name
                         KeybindButton.TextColor3 = Theme.Text
-                        ConfigSystem.CurrentConfig[KeybindName] = currentKey.Name
+                        KeybindObj.Value = currentKey
                         Callback(currentKey)
-                    elseif not gameProcessed and input.KeyCode == currentKey then
+                    elseif not gameProcessed and input.KeyCode == currentKey and not binding then
                         Callback(currentKey)
                     end
                 end)
                 
-                return KeybindFrame
+                return KeybindObj
             end
             
             return Section
@@ -1349,50 +1642,7 @@ function NebulaUi:CreateWindow(config)
         return Tab
     end
     
-    -- Config Save/Load Functions
-    function Window:SaveConfig(configName)
-        configName = configName or "DefaultConfig"
-        ConfigSystem.SavedConfigs[configName] = HttpService:JSONEncode(ConfigSystem.CurrentConfig)
-        
-        if writefile then
-            writefile("NebulaHub_" .. configName .. ".json", ConfigSystem.SavedConfigs[configName])
-        end
-        
-        return configName
-    end
-    
-    function Window:LoadConfig(configName)
-        configName = configName or "DefaultConfig"
-        
-        if readfile and isfile("NebulaHub_" .. configName .. ".json") then
-            local success, data = pcall(function()
-                return HttpService:JSONDecode(readfile("NebulaHub_" .. configName .. ".json"))
-            end)
-            
-            if success then
-                ConfigSystem.CurrentConfig = data
-                return true
-            end
-        end
-        
-        return false
-    end
-    
-    function Window:GetConfigList()
-        local configs = {}
-        
-        if listfiles then
-            for _, file in ipairs(listfiles()) do
-                if file:match("NebulaHub_(.+)%.json") then
-                    table.insert(configs, file:match("NebulaHub_(.+)%.json"))
-                end
-            end
-        end
-        
-        return configs
-    end
-    
     return Window
 end
 
-return NebulaUi
+return NebulaUI
