@@ -61,7 +61,7 @@ local function MakeDraggable(frame, dragFrame)
 end
 
 -- Create Window
-function SolixUI:CreateWindow(config)
+function NebulaUi:CreateWindow(config)
     config = config or {}
     local WindowName = config.Name or "Solix Hub"
     local ToggleKey = config.ToggleKey or Enum.KeyCode.V
