@@ -3,7 +3,7 @@ local TweenService = game:GetService("TweenService")
 local UserInputService = game:GetService("UserInputService")
 local HttpService = game:GetService("HttpService")
 
--- Theme Colors (Purple)
+-- Theme Colors (Purple) - MODIFIABLE PAR COLORPICKER
 local Theme = {
     Background = Color3.fromRGB(15, 15, 20),
     Sidebar = Color3.fromRGB(10, 10, 15),
@@ -17,6 +17,12 @@ local Theme = {
     Slider = Color3.fromRGB(130, 70, 200),
     SliderBg = Color3.fromRGB(30, 30, 40),
     Border = Color3.fromRGB(40, 40, 50)
+}
+
+-- Config System
+local ConfigSystem = {
+    CurrentConfig = {},
+    SavedConfigs = {}
 }
 
 -- Utility Functions
@@ -555,7 +561,8 @@ function NebulaUi:CreateWindow(config)
     -- Window Object
     local Window = {
         Tabs = {},
-        CurrentTab = nil
+        CurrentTab = nil,
+        SettingsTab = nil
     }
     
     -- Show Main UI after key validation (if key system is enabled)
@@ -570,7 +577,8 @@ function NebulaUi:CreateWindow(config)
     
     function Window:CreateTab(tabName)
         local Tab = {
-            Name = tabName
+            Name = tabName,
+            IsSettings = (tabName == "Settings")
         }
         
         -- Tab Button
@@ -581,6 +589,7 @@ function NebulaUi:CreateWindow(config)
         TabButton.BackgroundTransparency = 1
         TabButton.BorderSizePixel = 0
         TabButton.Text = ""
+        TabButton.LayoutOrder = Tab.IsSettings and 9999 or #Window.Tabs
         TabButton.Parent = TabList
         
         local TabIndicator = Instance.new("Frame")
@@ -696,6 +705,10 @@ function NebulaUi:CreateWindow(config)
         Tab.Label = TabLabel
         Tab.Indicator = TabIndicator
         
+        if Tab.IsSettings then
+            Window.SettingsTab = Tab
+        end
+        
         table.insert(Window.Tabs, Tab)
         
         -- Auto-select first tab
@@ -736,6 +749,88 @@ function NebulaUi:CreateWindow(config)
             SectionTitle.Parent = SectionFrame
             
             local Section = {Frame = SectionFrame, Column = column}
+            
+            function Section:AddLabel(config)
+                config = config or {}
+                local LabelText = config.Text or "Label"
+                
+                local LabelFrame = Instance.new("Frame")
+                LabelFrame.Name = "Label_" .. LabelText
+                LabelFrame.Size = UDim2.new(1, 0, 0, 25)
+                LabelFrame.BackgroundTransparency = 1
+                LabelFrame.BorderSizePixel = 0
+                LabelFrame.Parent = SectionFrame
+                
+                local Label = Instance.new("TextLabel")
+                Label.Size = UDim2.new(1, -8, 1, 0)
+                Label.Position = UDim2.new(0, 8, 0, 0)
+                Label.BackgroundTransparency = 1
+                Label.Text = LabelText
+                Label.TextColor3 = Theme.TextDark
+                Label.TextSize = 11
+                Label.Font = Enum.Font.Gotham
+                Label.TextXAlignment = Enum.TextXAlignment.Left
+                Label.TextWrapped = true
+                Label.Parent = LabelFrame
+                
+                return LabelFrame
+            end
+            
+            function Section:AddParagraph(config)
+                config = config or {}
+                local Title = config.Title or "Paragraph"
+                local Content = config.Content or "Content"
+                
+                local ParagraphFrame = Instance.new("Frame")
+                ParagraphFrame.Name = "Paragraph_" .. Title
+                ParagraphFrame.Size = UDim2.new(1, 0, 0, 0)
+                ParagraphFrame.BackgroundColor3 = Theme.Element
+                ParagraphFrame.BackgroundTransparency = 0.5
+                ParagraphFrame.BorderSizePixel = 0
+                ParagraphFrame.AutomaticSize = Enum.AutomaticSize.Y
+                ParagraphFrame.Parent = SectionFrame
+                
+                local ParagraphCorner = Instance.new("UICorner")
+                ParagraphCorner.CornerRadius = UDim.new(0, 3)
+                ParagraphCorner.Parent = ParagraphFrame
+                
+                local ParagraphLayout = Instance.new("UIListLayout")
+                ParagraphLayout.SortOrder = Enum.SortOrder.LayoutOrder
+                ParagraphLayout.Padding = UDim.new(0, 3)
+                ParagraphLayout.Parent = ParagraphFrame
+                
+                local ParagraphPadding = Instance.new("UIPadding")
+                ParagraphPadding.PaddingTop = UDim.new(0, 8)
+                ParagraphPadding.PaddingBottom = UDim.new(0, 8)
+                ParagraphPadding.PaddingLeft = UDim.new(0, 8)
+                ParagraphPadding.PaddingRight = UDim.new(0, 8)
+                ParagraphPadding.Parent = ParagraphFrame
+                
+                local ParagraphTitle = Instance.new("TextLabel")
+                ParagraphTitle.Size = UDim2.new(1, 0, 0, 18)
+                ParagraphTitle.BackgroundTransparency = 1
+                ParagraphTitle.Text = Title
+                ParagraphTitle.TextColor3 = Theme.Text
+                ParagraphTitle.TextSize = 12
+                ParagraphTitle.Font = Enum.Font.GothamBold
+                ParagraphTitle.TextXAlignment = Enum.TextXAlignment.Left
+                ParagraphTitle.Parent = ParagraphFrame
+                
+                local ParagraphContent = Instance.new("TextLabel")
+                ParagraphContent.Size = UDim2.new(1, 0, 0, 0)
+                ParagraphContent.BackgroundTransparency = 1
+                ParagraphContent.Text = Content
+                ParagraphContent.TextColor3 = Theme.TextDark
+                ParagraphContent.TextSize = 10
+                ParagraphContent.Font = Enum.Font.Gotham
+                ParagraphContent.TextXAlignment = Enum.TextXAlignment.Left
+                ParagraphContent.TextWrapped = true
+                ParagraphContent.TextYAlignment = Enum.TextYAlignment.Top
+                ParagraphContent.AutomaticSize = Enum.AutomaticSize.Y
+                ParagraphContent.Parent = ParagraphFrame
+                
+                return ParagraphFrame
+            end
             
             function Section:AddToggle(config)
                 config = config or {}
@@ -780,6 +875,8 @@ function NebulaUi:CreateWindow(config)
                 
                 local toggled = DefaultValue
                 
+                ConfigSystem.CurrentConfig[ToggleName] = toggled
+                
                 local function UpdateToggle()
                     if toggled then
                         Tween(ToggleButton, {BackgroundColor3 = Theme.Toggle, Size = UDim2.new(0, 16, 0, 16)}, 0.2)
@@ -788,6 +885,7 @@ function NebulaUi:CreateWindow(config)
                     else
                         Tween(ToggleButton, {BackgroundColor3 = Theme.ToggleOff}, 0.2)
                     end
+                    ConfigSystem.CurrentConfig[ToggleName] = toggled
                     Callback(toggled)
                 end
                 
@@ -913,11 +1011,14 @@ function NebulaUi:CreateWindow(config)
                 local dragging = false
                 local value = Default
                 
+                ConfigSystem.CurrentConfig[SliderName] = value
+                
                 local function UpdateSlider(input)
                     local pos = math.clamp((input.Position.X - SliderBar.AbsolutePosition.X) / SliderBar.AbsoluteSize.X, 0, 1)
                     value = math.floor(Min + (Max - Min) * pos)
                     SliderValue.Text = tostring(value)
                     Tween(SliderFill, {Size = UDim2.new(pos, 0, 1, 0)}, 0.1)
+                    ConfigSystem.CurrentConfig[SliderName] = value
                     Callback(value)
                 end
                 
@@ -1015,43 +1116,55 @@ function NebulaUi:CreateWindow(config)
                 local opened = false
                 local selected = Default
                 
+                ConfigSystem.CurrentConfig[DropdownName] = selected
+                
+                local Dropdown = {
+                    Options = Options,
+                    AddOption = function(self, option)
+                        table.insert(self.Options, option)
+                        
+                        local OptionButton = Instance.new("TextButton")
+                        OptionButton.Size = UDim2.new(1, 0, 0, 24)
+                        OptionButton.BackgroundColor3 = Theme.SliderBg
+                        OptionButton.BorderSizePixel = 0
+                        OptionButton.Text = option
+                        OptionButton.TextColor3 = Theme.Text
+                        OptionButton.TextSize = 10
+                        OptionButton.Font = Enum.Font.Gotham
+                        OptionButton.Parent = DropdownList
+                        
+                        local OptionCorner = Instance.new("UICorner")
+                        OptionCorner.CornerRadius = UDim.new(0, 3)
+                        OptionCorner.Parent = OptionButton
+                        
+                        OptionButton.MouseButton1Click:Connect(function()
+                            selected = option
+                            DropdownButton.Text = option
+                            opened = false
+                            Tween(DropdownFrame, {Size = UDim2.new(1, 0, 0, 30)}, 0.2, Enum.EasingStyle.Quart)
+                            Tween(DropdownArrow, {Rotation = 0}, 0.2)
+                            ConfigSystem.CurrentConfig[DropdownName] = selected
+                            Callback(option)
+                        end)
+                        
+                        OptionButton.MouseEnter:Connect(function()
+                            Tween(OptionButton, {BackgroundColor3 = Theme.Primary}, 0.15)
+                        end)
+                        
+                        OptionButton.MouseLeave:Connect(function()
+                            Tween(OptionButton, {BackgroundColor3 = Theme.SliderBg}, 0.15)
+                        end)
+                    end
+                }
+                
                 for i, option in ipairs(Options) do
-                    local OptionButton = Instance.new("TextButton")
-                    OptionButton.Size = UDim2.new(1, 0, 0, 24)
-                    OptionButton.BackgroundColor3 = Theme.SliderBg
-                    OptionButton.BorderSizePixel = 0
-                    OptionButton.Text = option
-                    OptionButton.TextColor3 = Theme.Text
-                    OptionButton.TextSize = 10
-                    OptionButton.Font = Enum.Font.Gotham
-                    OptionButton.Parent = DropdownList
-                    
-                    local OptionCorner = Instance.new("UICorner")
-                    OptionCorner.CornerRadius = UDim.new(0, 3)
-                    OptionCorner.Parent = OptionButton
-                    
-                    OptionButton.MouseButton1Click:Connect(function()
-                        selected = option
-                        DropdownButton.Text = option
-                        opened = false
-                        Tween(DropdownFrame, {Size = UDim2.new(1, 0, 0, 30)}, 0.2, Enum.EasingStyle.Quart)
-                        Tween(DropdownArrow, {Rotation = 0}, 0.2)
-                        Callback(option)
-                    end)
-                    
-                    OptionButton.MouseEnter:Connect(function()
-                        Tween(OptionButton, {BackgroundColor3 = Theme.Primary}, 0.15)
-                    end)
-                    
-                    OptionButton.MouseLeave:Connect(function()
-                        Tween(OptionButton, {BackgroundColor3 = Theme.SliderBg}, 0.15)
-                    end)
+                    Dropdown:AddOption(option)
                 end
                 
                 DropdownButton.MouseButton1Click:Connect(function()
                     opened = not opened
                     if opened then
-                        local height = 35 + (#Options * 26)
+                        local height = 35 + (#Dropdown.Options * 26)
                         Tween(DropdownFrame, {Size = UDim2.new(1, 0, 0, height)}, 0.2, Enum.EasingStyle.Quart)
                         Tween(DropdownArrow, {Rotation = 180}, 0.2)
                     else
@@ -1060,7 +1173,7 @@ function NebulaUi:CreateWindow(config)
                     end
                 end)
                 
-                return DropdownFrame
+                return Dropdown
             end
             
             function Section:AddTextbox(config)
@@ -1117,17 +1230,373 @@ function NebulaUi:CreateWindow(config)
                 TextboxInput.ClearTextOnFocus = false
                 TextboxInput.Parent = TextboxInputFrame
                 
+                ConfigSystem.CurrentConfig[TextboxName] = ""
+                
                 TextboxInput.FocusLost:Connect(function(enterPressed)
+                    ConfigSystem.CurrentConfig[TextboxName] = TextboxInput.Text
                     Callback(TextboxInput.Text)
                 end)
                 
                 return TextboxFrame
             end
             
+            function Section:AddInput(config)
+                config = config or {}
+                local InputName = config.Name or "Input"
+                local Default = config.Default or ""
+                local PlaceholderText = config.PlaceholderText or "Type here..."
+                local Callback = config.Callback or function() end
+                
+                return Section:AddTextbox({
+                    Name = InputName,
+                    PlaceholderText = PlaceholderText,
+                    Callback = Callback
+                })
+            end
+            
+            function Section:AddKeybind(config)
+                config = config or {}
+                local KeybindName = config.Name or "Keybind"
+                local Default = config.Default or Enum.KeyCode.E
+                local Callback = config.Callback or function() end
+                
+                local KeybindFrame = Instance.new("Frame")
+                KeybindFrame.Name = "Keybind_" .. KeybindName
+                KeybindFrame.Size = UDim2.new(1, 0, 0, 30)
+                KeybindFrame.BackgroundColor3 = Theme.Element
+                KeybindFrame.BackgroundTransparency = 0.5
+                KeybindFrame.BorderSizePixel = 0
+                KeybindFrame.Parent = SectionFrame
+                
+                local KeybindCorner = Instance.new("UICorner")
+                KeybindCorner.CornerRadius = UDim.new(0, 3)
+                KeybindCorner.Parent = KeybindFrame
+                
+                local KeybindLabel = Instance.new("TextLabel")
+                KeybindLabel.Size = UDim2.new(1, -80, 1, 0)
+                KeybindLabel.Position = UDim2.new(0, 8, 0, 0)
+                KeybindLabel.BackgroundTransparency = 1
+                KeybindLabel.Text = KeybindName
+                KeybindLabel.TextColor3 = Theme.Text
+                KeybindLabel.TextSize = 11
+                KeybindLabel.Font = Enum.Font.Gotham
+                KeybindLabel.TextXAlignment = Enum.TextXAlignment.Left
+                KeybindLabel.Parent = KeybindFrame
+                
+                local KeybindButton = Instance.new("TextButton")
+                KeybindButton.Size = UDim2.new(0, 65, 0, 22)
+                KeybindButton.Position = UDim2.new(1, -70, 0, 4)
+                KeybindButton.BackgroundColor3 = Theme.SliderBg
+                KeybindButton.BorderSizePixel = 0
+                KeybindButton.Text = Default.Name
+                KeybindButton.TextColor3 = Theme.Text
+                KeybindButton.TextSize = 10
+                KeybindButton.Font = Enum.Font.Gotham
+                KeybindButton.Parent = KeybindFrame
+                
+                local KeybindButtonCorner = Instance.new("UICorner")
+                KeybindButtonCorner.CornerRadius = UDim.new(0, 3)
+                KeybindButtonCorner.Parent = KeybindButton
+                
+                local currentKey = Default
+                local binding = false
+                
+                ConfigSystem.CurrentConfig[KeybindName] = currentKey.Name
+                
+                KeybindButton.MouseButton1Click:Connect(function()
+                    binding = true
+                    KeybindButton.Text = "..."
+                    KeybindButton.TextColor3 = Theme.Primary
+                end)
+                
+                UserInputService.InputBegan:Connect(function(input, gameProcessed)
+                    if binding and input.UserInputType == Enum.UserInputType.Keyboard then
+                        binding = false
+                        currentKey = input.KeyCode
+                        KeybindButton.Text = currentKey.Name
+                        KeybindButton.TextColor3 = Theme.Text
+                        ConfigSystem.CurrentConfig[KeybindName] = currentKey.Name
+                        Callback(currentKey)
+                    elseif not gameProcessed and input.KeyCode == currentKey then
+                        Callback(currentKey)
+                    end
+                end)
+                
+                return KeybindFrame
+            end
+            
+            function Section:AddColorPicker(config)
+                config = config or {}
+                local ColorPickerName = config.Name or "ColorPicker"
+                local Default = config.Default or Color3.fromRGB(130, 70, 200)
+                local Callback = config.Callback or function() end
+                
+                local ColorPickerFrame = Instance.new("Frame")
+                ColorPickerFrame.Name = "ColorPicker_" .. ColorPickerName
+                ColorPickerFrame.Size = UDim2.new(1, 0, 0, 30)
+                ColorPickerFrame.BackgroundColor3 = Theme.Element
+                ColorPickerFrame.BackgroundTransparency = 0.5
+                ColorPickerFrame.BorderSizePixel = 0
+                ColorPickerFrame.Parent = SectionFrame
+                
+                local ColorPickerCorner = Instance.new("UICorner")
+                ColorPickerCorner.CornerRadius = UDim.new(0, 3)
+                ColorPickerCorner.Parent = ColorPickerFrame
+                
+                local ColorPickerLabel = Instance.new("TextLabel")
+                ColorPickerLabel.Size = UDim2.new(1, -35, 1, 0)
+                ColorPickerLabel.Position = UDim2.new(0, 8, 0, 0)
+                ColorPickerLabel.BackgroundTransparency = 1
+                ColorPickerLabel.Text = ColorPickerName
+                ColorPickerLabel.TextColor3 = Theme.Text
+                ColorPickerLabel.TextSize = 11
+                ColorPickerLabel.Font = Enum.Font.Gotham
+                ColorPickerLabel.TextXAlignment = Enum.TextXAlignment.Left
+                ColorPickerLabel.Parent = ColorPickerFrame
+                
+                local ColorDisplay = Instance.new("Frame")
+                ColorDisplay.Size = UDim2.new(0, 20, 0, 20)
+                ColorDisplay.Position = UDim2.new(1, -25, 0.5, -10)
+                ColorDisplay.BackgroundColor3 = Default
+                ColorDisplay.BorderSizePixel = 0
+                ColorDisplay.Parent = ColorPickerFrame
+                
+                local ColorDisplayCorner = Instance.new("UICorner")
+                ColorDisplayCorner.CornerRadius = UDim.new(0, 3)
+                ColorDisplayCorner.Parent = ColorDisplay
+                
+                local ColorDisplayStroke = Instance.new("UIStroke")
+                ColorDisplayStroke.Color = Theme.Border
+                ColorDisplayStroke.Thickness = 1
+                ColorDisplayStroke.Parent = ColorDisplay
+                
+                -- Color Picker Popup
+                local ColorPickerPopup = Instance.new("Frame")
+                ColorPickerPopup.Name = "ColorPickerPopup"
+                ColorPickerPopup.Size = UDim2.new(0, 200, 0, 230)
+                ColorPickerPopup.Position = UDim2.new(0.5, -100, 0.5, -115)
+                ColorPickerPopup.BackgroundColor3 = Theme.Background
+                ColorPickerPopup.BorderSizePixel = 0
+                ColorPickerPopup.Visible = false
+                ColorPickerPopup.ZIndex = 10
+                ColorPickerPopup.Parent = NebulaGui
+                
+                local PopupCorner = Instance.new("UICorner")
+                PopupCorner.CornerRadius = UDim.new(0, 6)
+                PopupCorner.Parent = ColorPickerPopup
+                
+                local PopupStroke = Instance.new("UIStroke")
+                PopupStroke.Color = Theme.Primary
+                PopupStroke.Thickness = 2
+                PopupStroke.Parent = ColorPickerPopup
+                
+                -- Color Canvas
+                local ColorCanvas = Instance.new("ImageButton")
+                ColorCanvas.Size = UDim2.new(1, -20, 0, 150)
+                ColorCanvas.Position = UDim2.new(0, 10, 0, 10)
+                ColorCanvas.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+                ColorCanvas.BorderSizePixel = 0
+                ColorCanvas.Image = "rbxassetid://4155801252"
+                ColorCanvas.Parent = ColorPickerPopup
+                
+                local CanvasCorner = Instance.new("UICorner")
+                CanvasCorner.CornerRadius = UDim.new(0, 4)
+                CanvasCorner.Parent = ColorCanvas
+                
+                -- Hue Slider
+                local HueSlider = Instance.new("ImageButton")
+                HueSlider.Size = UDim2.new(1, -20, 0, 15)
+                HueSlider.Position = UDim2.new(0, 10, 0, 170)
+                HueSlider.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+                HueSlider.BorderSizePixel = 0
+                HueSlider.Image = "rbxassetid://3641079629"
+                HueSlider.Parent = ColorPickerPopup
+                
+                local HueCorner = Instance.new("UICorner")
+                HueCorner.CornerRadius = UDim.new(0, 4)
+                HueCorner.Parent = HueSlider
+                
+                -- Confirm/Cancel Buttons
+                local ConfirmButton = Instance.new("TextButton")
+                ConfirmButton.Size = UDim2.new(0.48, 0, 0, 30)
+                ConfirmButton.Position = UDim2.new(0, 10, 1, -40)
+                ConfirmButton.BackgroundColor3 = Theme.Primary
+                ConfirmButton.BorderSizePixel = 0
+                ConfirmButton.Text = "Confirm"
+                ConfirmButton.TextColor3 = Theme.Text
+                ConfirmButton.TextSize = 11
+                ConfirmButton.Font = Enum.Font.GothamBold
+                ConfirmButton.Parent = ColorPickerPopup
+                
+                local ConfirmCorner = Instance.new("UICorner")
+                ConfirmCorner.CornerRadius = UDim.new(0, 4)
+                ConfirmCorner.Parent = ConfirmButton
+                
+                local CancelButton = Instance.new("TextButton")
+                CancelButton.Size = UDim2.new(0.48, 0, 0, 30)
+                CancelButton.Position = UDim2.new(0.52, 0, 1, -40)
+                CancelButton.BackgroundColor3 = Theme.Element
+                CancelButton.BorderSizePixel = 0
+                CancelButton.Text = "Cancel"
+                CancelButton.TextColor3 = Theme.Text
+                CancelButton.TextSize = 11
+                CancelButton.Font = Enum.Font.GothamBold
+                CancelButton.Parent = ColorPickerPopup
+                
+                local CancelCorner = Instance.new("UICorner")
+                CancelCorner.CornerRadius = UDim.new(0, 4)
+                CancelCorner.Parent = CancelButton
+                
+                local currentColor = Default
+                local hue, sat, val = 0, 1, 1
+                
+                ConfigSystem.CurrentConfig[ColorPickerName] = {currentColor.R * 255, currentColor.G * 255, currentColor.B * 255}
+                
+                local function UpdateColor(newColor)
+                    currentColor = newColor
+                    ColorDisplay.BackgroundColor3 = newColor
+                    ConfigSystem.CurrentConfig[ColorPickerName] = {newColor.R * 255, newColor.G * 255, newColor.B * 255}
+                    Callback(newColor)
+                end
+                
+                local function UpdateCanvas()
+                    ColorCanvas.BackgroundColor3 = Color3.fromHSV(hue, 1, 1)
+                end
+                
+                ColorCanvas.MouseButton1Down:Connect(function()
+                    local dragging = true
+                    local function update()
+                        local pos = ColorCanvas.AbsolutePosition
+                        local size = ColorCanvas.AbsoluteSize
+                        local mouse = UserInputService:GetMouseLocation()
+                        
+                        sat = math.clamp((mouse.X - pos.X) / size.X, 0, 1)
+                        val = 1 - math.clamp((mouse.Y - pos.Y) / size.Y, 0, 1)
+                        
+                        local newColor = Color3.fromHSV(hue, sat, val)
+                        ColorDisplay.BackgroundColor3 = newColor
+                    end
+                    
+                    update()
+                    
+                    local connection
+                    connection = UserInputService.InputEnded:Connect(function(input)
+                        if input.UserInputType == Enum.UserInputType.MouseButton1 then
+                            dragging = false
+                            connection:Disconnect()
+                        end
+                    end)
+                    
+                    UserInputService.InputChanged:Connect(function()
+                        if dragging then
+                            update()
+                        end
+                    end)
+                end)
+                
+                HueSlider.MouseButton1Down:Connect(function()
+                    local dragging = true
+                    local function update()
+                        local pos = HueSlider.AbsolutePosition
+                        local size = HueSlider.AbsoluteSize
+                        local mouse = UserInputService:GetMouseLocation()
+                        
+                        hue = math.clamp((mouse.X - pos.X) / size.X, 0, 1)
+                        UpdateCanvas()
+                        
+                        local newColor = Color3.fromHSV(hue, sat, val)
+                        ColorDisplay.BackgroundColor3 = newColor
+                    end
+                    
+                    update()
+                    
+                    local connection
+                    connection = UserInputService.InputEnded:Connect(function(input)
+                        if input.UserInputType == Enum.UserInputType.MouseButton1 then
+                            dragging = false
+                            connection:Disconnect()
+                        end
+                    end)
+                    
+                    UserInputService.InputChanged:Connect(function()
+                        if dragging then
+                            update()
+                        end
+                    end)
+                end)
+                
+                local ColorPickerButton = Instance.new("TextButton")
+                ColorPickerButton.Size = UDim2.new(1, 0, 1, 0)
+                ColorPickerButton.BackgroundTransparency = 1
+                ColorPickerButton.Text = ""
+                ColorPickerButton.Parent = ColorPickerFrame
+                
+                ColorPickerButton.MouseButton1Click:Connect(function()
+                    ColorPickerPopup.Visible = true
+                end)
+                
+                ConfirmButton.MouseButton1Click:Connect(function()
+                    UpdateColor(ColorDisplay.BackgroundColor3)
+                    ColorPickerPopup.Visible = false
+                end)
+                
+                CancelButton.MouseButton1Click:Connect(function()
+                    ColorDisplay.BackgroundColor3 = currentColor
+                    ColorPickerPopup.Visible = false
+                end)
+                
+                MakeDraggable(ColorPickerPopup)
+                
+                return ColorPickerFrame
+            end
+            
             return Section
         end
         
         return Tab
+    end
+    
+    -- Config Save/Load Functions
+    function Window:SaveConfig(configName)
+        configName = configName or "DefaultConfig"
+        ConfigSystem.SavedConfigs[configName] = HttpService:JSONEncode(ConfigSystem.CurrentConfig)
+        
+        if writefile then
+            writefile("NebulaHub_" .. configName .. ".json", ConfigSystem.SavedConfigs[configName])
+        end
+        
+        return configName
+    end
+    
+    function Window:LoadConfig(configName)
+        configName = configName or "DefaultConfig"
+        
+        if readfile and isfile("NebulaHub_" .. configName .. ".json") then
+            local success, data = pcall(function()
+                return HttpService:JSONDecode(readfile("NebulaHub_" .. configName .. ".json"))
+            end)
+            
+            if success then
+                ConfigSystem.CurrentConfig = data
+                return true
+            end
+        end
+        
+        return false
+    end
+    
+    function Window:GetConfigList()
+        local configs = {}
+        
+        if listfiles then
+            for _, file in ipairs(listfiles()) do
+                if file:match("NebulaHub_(.+)%.json") then
+                    table.insert(configs, file:match("NebulaHub_(.+)%.json"))
+                end
+            end
+        end
+        
+        return configs
     end
     
     return Window
