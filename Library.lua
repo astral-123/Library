@@ -1,7 +1,3 @@
--- Solix Hub UI Library - Final Version
--- With Key System & Resize Option
--- Purple Theme
-
 local NebulaUi = {}
 local TweenService = game:GetService("TweenService")
 local UserInputService = game:GetService("UserInputService")
