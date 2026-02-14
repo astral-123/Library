@@ -1,4 +1,9 @@
-local NebulaUi = {}
+-- Nebula Hub UI Library
+-- With Key System & Resize Option
+-- Purple Theme
+-- By Astral
+
+local NebulaUI = {}
 local TweenService = game:GetService("TweenService")
 local UserInputService = game:GetService("UserInputService")
 local HttpService = game:GetService("HttpService")
@@ -61,12 +66,12 @@ local function MakeDraggable(frame, dragFrame)
 end
 
 -- Create Window
-function NebulaUi:CreateWindow(config)
+function NebulaUI:CreateWindow(config)
     config = config or {}
     local WindowName = config.Name or "Nebula Hub"
     local ToggleKey = config.ToggleKey or Enum.KeyCode.V
     local KeySystem = config.KeySystem or false
-    local Key = config.Key or "1234"
+    local Key = config.Key or "NebulaHub2024"
     local Resizable = config.Resizable or true
     
     -- ScreenGui
@@ -568,6 +573,7 @@ function NebulaUi:CreateWindow(config)
         end)
     end
     
+    -- Create Tab
     function Window:CreateTab(tabName)
         local Tab = {
             Name = tabName
@@ -707,6 +713,7 @@ function NebulaUi:CreateWindow(config)
             Window.CurrentTab = Tab
         end
         
+        -- AddSection Function
         function Tab:AddSection(sectionName, column)
             column = column or "left"
             local parentColumn = column == "left" and LeftColumn or RightColumn
@@ -737,6 +744,7 @@ function NebulaUi:CreateWindow(config)
             
             local Section = {Frame = SectionFrame, Column = column}
             
+            -- AddToggle
             function Section:AddToggle(config)
                 config = config or {}
                 local ToggleName = config.Name or "Toggle"
@@ -806,6 +814,7 @@ function NebulaUi:CreateWindow(config)
                 return ToggleFrame
             end
             
+            -- AddButton
             function Section:AddButton(config)
                 config = config or {}
                 local ButtonName = config.Name or "Button"
@@ -845,6 +854,7 @@ function NebulaUi:CreateWindow(config)
                 return ButtonFrame
             end
             
+            -- AddSlider
             function Section:AddSlider(config)
                 config = config or {}
                 local SliderName = config.Name or "Slider"
@@ -943,6 +953,7 @@ function NebulaUi:CreateWindow(config)
                 return SliderFrame
             end
             
+            -- AddDropdown
             function Section:AddDropdown(config)
                 config = config or {}
                 local DropdownName = config.Name or "Dropdown"
@@ -1063,65 +1074,74 @@ function NebulaUi:CreateWindow(config)
                 return DropdownFrame
             end
             
-            function Section:AddTextbox(config)
+            -- AddTextBox
+            function Section:AddTextBox(config)
                 config = config or {}
-                local TextboxName = config.Name or "Textbox"
-                local PlaceholderText = config.PlaceholderText or "Enter text..."
+                local TextBoxName = config.Name or "TextBox"
+                local PlaceholderText = config.Placeholder or "Enter text..."
+                local DefaultText = config.Default or ""
                 local Callback = config.Callback or function() end
                 
-                local TextboxFrame = Instance.new("Frame")
-                TextboxFrame.Name = "Textbox_" .. TextboxName
-                TextboxFrame.Size = UDim2.new(1, 0, 0, 60)
-                TextboxFrame.BackgroundColor3 = Theme.Element
-                TextboxFrame.BackgroundTransparency = 0.5
-                TextboxFrame.BorderSizePixel = 0
-                TextboxFrame.Parent = SectionFrame
+                local TextBoxFrame = Instance.new("Frame")
+                TextBoxFrame.Name = "TextBox_" .. TextBoxName
+                TextBoxFrame.Size = UDim2.new(1, 0, 0, 35)
+                TextBoxFrame.BackgroundColor3 = Theme.Element
+                TextBoxFrame.BackgroundTransparency = 0.5
+                TextBoxFrame.BorderSizePixel = 0
+                TextBoxFrame.Parent = SectionFrame
                 
-                local TextboxCorner = Instance.new("UICorner")
-                TextboxCorner.CornerRadius = UDim.new(0, 3)
-                TextboxCorner.Parent = TextboxFrame
+                local TextBoxCorner = Instance.new("UICorner")
+                TextBoxCorner.CornerRadius = UDim.new(0, 3)
+                TextBoxCorner.Parent = TextBoxFrame
                 
-                local TextboxLabel = Instance.new("TextLabel")
-                TextboxLabel.Size = UDim2.new(1, -16, 0, 20)
-                TextboxLabel.Position = UDim2.new(0, 8, 0, 5)
-                TextboxLabel.BackgroundTransparency = 1
-                TextboxLabel.Text = TextboxName
-                TextboxLabel.TextColor3 = Theme.Text
-                TextboxLabel.TextSize = 11
-                TextboxLabel.Font = Enum.Font.Gotham
-                TextboxLabel.TextXAlignment = Enum.TextXAlignment.Left
-                TextboxLabel.Parent = TextboxFrame
+                local TextBoxLabel = Instance.new("TextLabel")
+                TextBoxLabel.Size = UDim2.new(0, 100, 1, 0)
+                TextBoxLabel.Position = UDim2.new(0, 8, 0, 0)
+                TextBoxLabel.BackgroundTransparency = 1
+                TextBoxLabel.Text = TextBoxName
+                TextBoxLabel.TextColor3 = Theme.Text
+                TextBoxLabel.TextSize = 11
+                TextBoxLabel.Font = Enum.Font.Gotham
+                TextBoxLabel.TextXAlignment = Enum.TextXAlignment.Left
+                TextBoxLabel.Parent = TextBoxFrame
                 
-                local TextboxInputFrame = Instance.new("Frame")
-                TextboxInputFrame.Size = UDim2.new(1, -16, 0, 30)
-                TextboxInputFrame.Position = UDim2.new(0, 8, 0, 25)
-                TextboxInputFrame.BackgroundColor3 = Theme.SliderBg
-                TextboxInputFrame.BorderSizePixel = 0
-                TextboxInputFrame.Parent = TextboxFrame
+                local TextBoxInput = Instance.new("TextBox")
+                TextBoxInput.Size = UDim2.new(1, -115, 0, 25)
+                TextBoxInput.Position = UDim2.new(0, 105, 0, 5)
+                TextBoxInput.BackgroundColor3 = Theme.SliderBg
+                TextBoxInput.BorderSizePixel = 0
+                TextBoxInput.PlaceholderText = PlaceholderText
+                TextBoxInput.PlaceholderColor3 = Theme.TextDark
+                TextBoxInput.Text = DefaultText
+                TextBoxInput.TextColor3 = Theme.Text
+                TextBoxInput.TextSize = 10
+                TextBoxInput.Font = Enum.Font.Gotham
+                TextBoxInput.TextXAlignment = Enum.TextXAlignment.Left
+                TextBoxInput.ClearTextOnFocus = false
+                TextBoxInput.Parent = TextBoxFrame
                 
-                local TextboxInputCorner = Instance.new("UICorner")
-                TextboxInputCorner.CornerRadius = UDim.new(0, 3)
-                TextboxInputCorner.Parent = TextboxInputFrame
+                local TextBoxInputCorner = Instance.new("UICorner")
+                TextBoxInputCorner.CornerRadius = UDim.new(0, 3)
+                TextBoxInputCorner.Parent = TextBoxInput
                 
-                local TextboxInput = Instance.new("TextBox")
-                TextboxInput.Size = UDim2.new(1, -10, 1, 0)
-                TextboxInput.Position = UDim2.new(0, 5, 0, 0)
-                TextboxInput.BackgroundTransparency = 1
-                TextboxInput.PlaceholderText = PlaceholderText
-                TextboxInput.PlaceholderColor3 = Theme.TextDark
-                TextboxInput.Text = ""
-                TextboxInput.TextColor3 = Theme.Text
-                TextboxInput.TextSize = 11
-                TextboxInput.Font = Enum.Font.Gotham
-                TextboxInput.TextXAlignment = Enum.TextXAlignment.Left
-                TextboxInput.ClearTextOnFocus = false
-                TextboxInput.Parent = TextboxInputFrame
+                local TextBoxPadding = Instance.new("UIPadding")
+                TextBoxPadding.PaddingLeft = UDim.new(0, 8)
+                TextBoxPadding.PaddingRight = UDim.new(0, 8)
+                TextBoxPadding.Parent = TextBoxInput
                 
-                TextboxInput.FocusLost:Connect(function(enterPressed)
-                    Callback(TextboxInput.Text)
+                TextBoxInput.FocusLost:Connect(function(enterPressed)
+                    Callback(TextBoxInput.Text, enterPressed)
                 end)
                 
-                return TextboxFrame
+                TextBoxInput.Focused:Connect(function()
+                    Tween(TextBoxInput, {BackgroundColor3 = Theme.Primary}, 0.2)
+                end)
+                
+                TextBoxInput.FocusLost:Connect(function()
+                    Tween(TextBoxInput, {BackgroundColor3 = Theme.SliderBg}, 0.2)
+                end)
+                
+                return TextBoxFrame
             end
             
             return Section
@@ -1133,4 +1153,4 @@ function NebulaUi:CreateWindow(config)
     return Window
 end
 
-return NebulaUi
+return NebulaUI
