@@ -1,5 +1,3 @@
--- Astral Hub - Animal Simulator
--- Nebula Version
 -- By Astral
 
 local Players = game:GetService("Players")
