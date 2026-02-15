@@ -1,4 +1,5 @@
 -- By Astral
+-- A
 
 local NebulaUI = {}
 local TweenService = game:GetService("TweenService")
@@ -481,39 +482,18 @@ function NebulaUI:CreateWindow(config)
         ResizeHandle.BorderSizePixel = 0
         ResizeHandle.Parent = MainFrame
         
-        -- Créer les triangles pour faire un coin
-        local Triangle1 = Instance.new("Frame")
-        Triangle1.Size = UDim2.new(0, 15, 0, 3)
-        Triangle1.Position = UDim2.new(1, -15, 1, -15)
-        Triangle1.BackgroundColor3 = Theme.Primary
-        Triangle1.BackgroundTransparency = 0.3
-        Triangle1.BorderSizePixel = 0
-        Triangle1.Rotation = 45
-        Triangle1.Parent = MainFrame
+        -- Créer un vrai triangle avec ImageLabel
+        local TriangleImage = Instance.new("ImageLabel")
+        TriangleImage.Size = UDim2.new(0, 20, 0, 20)
+        TriangleImage.Position = UDim2.new(1, -20, 1, -20)
+        TriangleImage.BackgroundTransparency = 1
+        TriangleImage.Image = "rbxassetid://6031094678" -- Triangle pointant vers le coin
+        TriangleImage.ImageColor3 = Theme.Primary
+        TriangleImage.ImageTransparency = 0.3
+        TriangleImage.Rotation = 0
+        TriangleImage.Parent = MainFrame
         
-        table.insert(GUIElements, {Type = "Primary", Instance = Triangle1})
-        
-        local Triangle2 = Instance.new("Frame")
-        Triangle2.Size = UDim2.new(0, 10, 0, 3)
-        Triangle2.Position = UDim2.new(1, -10, 1, -10)
-        Triangle2.BackgroundColor3 = Theme.Primary
-        Triangle2.BackgroundTransparency = 0.3
-        Triangle2.BorderSizePixel = 0
-        Triangle2.Rotation = 45
-        Triangle2.Parent = MainFrame
-        
-        table.insert(GUIElements, {Type = "Primary", Instance = Triangle2})
-        
-        local Triangle3 = Instance.new("Frame")
-        Triangle3.Size = UDim2.new(0, 5, 0, 3)
-        Triangle3.Position = UDim2.new(1, -5, 1, -5)
-        Triangle3.BackgroundColor3 = Theme.Primary
-        Triangle3.BackgroundTransparency = 0.3
-        Triangle3.BorderSizePixel = 0
-        Triangle3.Rotation = 45
-        Triangle3.Parent = MainFrame
-        
-        table.insert(GUIElements, {Type = "Primary", Instance = Triangle3})
+        table.insert(GUIElements, {Type = "Primary", Instance = TriangleImage})
         
         local resizing = false
         local resizeStart, sizeStart
@@ -523,12 +503,24 @@ function NebulaUI:CreateWindow(config)
                 resizing = true
                 resizeStart = input.Position
                 sizeStart = MainFrame.AbsoluteSize
+                Tween(TriangleImage, {ImageTransparency = 0.1}, 0.2)
             end
         end)
         
         ResizeHandle.InputEnded:Connect(function(input)
             if input.UserInputType == Enum.UserInputType.MouseButton1 then
                 resizing = false
+                Tween(TriangleImage, {ImageTransparency = 0.3}, 0.2)
+            end
+        end)
+        
+        ResizeHandle.MouseEnter:Connect(function()
+            Tween(TriangleImage, {ImageTransparency = 0.1}, 0.15)
+        end)
+        
+        ResizeHandle.MouseLeave:Connect(function()
+            if not resizing then
+                Tween(TriangleImage, {ImageTransparency = 0.3}, 0.15)
             end
         end)
         
