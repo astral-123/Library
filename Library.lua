@@ -1,4 +1,5 @@
 -- By Astral
+-- a
 
 local NebulaUI = {}
 local TweenService = game:GetService("TweenService")
@@ -614,63 +615,6 @@ function NebulaUI:CreateWindow(config)
         end)
     end
     
-    function Window:SaveConfig(configName)
-        configName = configName or "DefaultConfig"
-        
-        local configData = {}
-        for flag, obj in pairs(ConfigSystem.Flags) do
-            configData[flag] = obj.Value
-        end
-        
-        local json = HttpService:JSONEncode(configData)
-        
-        if writefile then
-            writefile("NebulaHub_" .. configName .. ".json", json)
-            return true
-        else
-            return false
-        end
-    end
-    
-    function Window:LoadConfig(configName)
-        configName = configName or "DefaultConfig"
-        
-        if readfile and isfile and isfile("NebulaHub_" .. configName .. ".json") then
-            local success, configData = pcall(function()
-                return HttpService:JSONDecode(readfile("NebulaHub_" .. configName .. ".json"))
-            end)
-            
-            if success then
-                for flag, value in pairs(configData) do
-                    if ConfigSystem.Flags[flag] then
-                        ConfigSystem.Flags[flag]:Set(value)
-                    end
-                end
-                return true
-            end
-        end
-        return false
-    end
-    
-    function Window:GetConfigList()
-        local configs = {}
-        
-        if listfiles then
-            for _, file in ipairs(listfiles()) do
-                local configName = file:match("NebulaHub_(.+)%.json")
-                if configName then
-                    table.insert(configs, configName)
-                end
-            end
-        end
-        
-        if #configs == 0 then
-            table.insert(configs, "None")
-        end
-        
-        return configs
-    end
-    
     function Window:CreateTab(tabName)
         local isSettings = (tabName == "Settings")
         
@@ -855,113 +799,6 @@ function NebulaUI:CreateWindow(config)
                             Text = "Applied " .. themeName .. " theme!",
                             Duration = 2
                         })
-                    end
-                })
-                
-                local SettingsRight = Tab:AddSection("Config System", "right")
-                
-                local configNameInput = ""
-                local selectedConfig = "None"
-                
-                SettingsRight:AddInput({
-                    Name = "Config Name",
-                    PlaceholderText = "MyConfig",
-                    Callback = function(text)
-                        configNameInput = text
-                    end
-                })
-                
-                SettingsRight:AddDropdown({
-                    Name = "Select Config",
-                    Options = Window:GetConfigList(),
-                    Default = "None",
-                    Callback = function(value)
-                        selectedConfig = value
-                    end
-                })
-                
-                SettingsRight:AddButton({
-                    Name = "Save Config",
-                    Callback = function()
-                        if configNameInput ~= "" then
-                            local success = Window:SaveConfig(configNameInput)
-                            if success then
-                                Window:Notification({
-                                    Title = "Saved",
-                                    Text = "Config '" .. configNameInput .. "' saved!",
-                                    Duration = 3
-                                })
-                            else
-                                Window:Notification({
-                                    Title = "Error",
-                                    Text = "Failed to save!",
-                                    Duration = 3
-                                })
-                            end
-                        else
-                            Window:Notification({
-                                Title = "Error",
-                                Text = "Enter a config name!",
-                                Duration = 3
-                            })
-                        end
-                    end
-                })
-                
-                SettingsRight:AddButton({
-                    Name = "Load Config",
-                    Callback = function()
-                        if selectedConfig ~= "None" then
-                            local success = Window:LoadConfig(selectedConfig)
-                            if success then
-                                Window:Notification({
-                                    Title = "Loaded",
-                                    Text = "Config '" .. selectedConfig .. "' loaded!",
-                                    Duration = 3
-                                })
-                            else
-                                Window:Notification({
-                                    Title = "Error",
-                                    Text = "Failed to load!",
-                                    Duration = 3
-                                })
-                            end
-                        else
-                            Window:Notification({
-                                Title = "Error",
-                                Text = "Select a config!",
-                                Duration = 3
-                            })
-                        end
-                    end
-                })
-                
-                SettingsRight:AddButton({
-                    Name = "Delete Config",
-                    Callback = function()
-                        if selectedConfig ~= "None" then
-                            if delfile then
-                                delfile("NebulaHub_" .. selectedConfig .. ".json")
-                                Window:Notification({
-                                    Title = "Deleted",
-                                    Text = "Config deleted!",
-                                    Duration = 3
-                                })
-                                selectedConfig = "None"
-                            else
-                                Window:Notification({
-                                    Title = "Error",
-                                    Text = "delfile not supported!",
-                                    Duration = 3
-                                })
-                            end
-                        else
-                            Window:Notification({
-                                Title = "Error",
-                                Text = "Select a config!",
-                                Duration = 3
-                            })
-                        end
                     end
                 })
             end)
