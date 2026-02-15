@@ -1,4 +1,5 @@
 -- By Astral
+-- A
 
 local NebulaUI = {}
 local TweenService = game:GetService("TweenService")
@@ -473,6 +474,9 @@ function NebulaUI:CreateWindow(config)
     ContentContainer.Parent = MainFrame
     
     if Resizable then
+        local resizing = false
+        local resizeStart, sizeStart
+        
         local ResizeHandle = Instance.new("Frame")
         ResizeHandle.Name = "ResizeHandle"
         ResizeHandle.Size = UDim2.new(0, 20, 0, 20)
@@ -616,29 +620,6 @@ function NebulaUI:CreateWindow(config)
                 Arrow1.Parent = ResizeContainer
                 table.insert(GUIElements, {Type = "Primary", Instance = Arrow1})
             end
-            
-            -- Animation au hover
-            for _, child in pairs(ResizeContainer:GetChildren()) do
-                if child:IsA("GuiObject") then
-                    ResizeHandle.MouseEnter:Connect(function()
-                        if child:IsA("ImageLabel") then
-                            Tween(child, {ImageTransparency = 0.1}, 0.15)
-                        else
-                            Tween(child, {BackgroundTransparency = 0.1}, 0.15)
-                        end
-                    end)
-                    
-                    ResizeHandle.MouseLeave:Connect(function()
-                        if not resizing then
-                            if child:IsA("ImageLabel") then
-                                Tween(child, {ImageTransparency = 0.3}, 0.15)
-                            else
-                                Tween(child, {BackgroundTransparency = 0.3}, 0.15)
-                            end
-                        end
-                    end)
-                end
-            end
         end
         
         -- Style par défaut
@@ -646,9 +627,6 @@ function NebulaUI:CreateWindow(config)
         
         -- Stocker la fonction pour l'utiliser depuis Settings
         Window.ChangeResizeStyle = CreateResizeStyle
-        
-        local resizing = false
-        local resizeStart, sizeStart
         
         ResizeHandle.InputBegan:Connect(function(input)
             if input.UserInputType == Enum.UserInputType.MouseButton1 then
