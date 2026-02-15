@@ -1,5 +1,5 @@
 -- By Astral
--- 
+-- G
 
 local NebulaUI = {}
 local TweenService = game:GetService("TweenService")
