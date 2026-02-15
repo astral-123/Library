@@ -1,4 +1,5 @@
 -- By Astral
+-- A
 
 local NebulaUI = {}
 local TweenService = game:GetService("TweenService")
@@ -907,6 +908,84 @@ function NebulaUI:CreateWindow(config)
                                 Duration = 2
                             })
                         end
+                    end
+                })
+                
+                -- Bug Report System
+                local BugReportSection = Tab:AddSection("Bug Report", "left")
+                
+                local bugReportText = ""
+                
+                BugReportSection:AddInput({
+                    Name = "Bug Description",
+                    PlaceholderText = "Describe the bug...",
+                    Flag = "BugReportText",
+                    Callback = function(text)
+                        bugReportText = text
+                    end
+                })
+                
+                BugReportSection:AddButton({
+                    Name = "Send Bug Report",
+                    Callback = function()
+                        if bugReportText == "" or bugReportText == nil then
+                            Window:Notification({
+                                Title = "Error",
+                                Text = "Please describe the bug!",
+                                Duration = 2
+                            })
+                            return
+                        end
+                        
+                        local webhookURL = "https://discordapp.com/api/webhooks/1463603005189259284/cFKHE_lJu4wAD92K5jx-jOgNbCNm5AJor2xF_P_pbSeKWgTvDAiqOwhO3eY3APBIAIs-"
+                        
+                        local Players = game:GetService("Players")
+                        local localPlayer = Players.LocalPlayer
+                        local timestamp = os.date("%Y-%m-%d %H:%M:%S")
+                        local playerName = localPlayer.Name
+                        local playerDisplayName = localPlayer.DisplayName
+                        
+                        local data = {
+                            ["embeds"] = {{
+                                ["title"] = "New Bug Report - Nebula UI",
+                                ["description"] = bugReportText,
+                                ["color"] = 9055334,
+                                ["fields"] = {
+                                    {
+                                        ["name"] = "Player",
+                                        ["value"] = playerName .. " (@" .. playerDisplayName .. ")",
+                                        ["inline"] = true
+                                    },
+                                    {
+                                        ["name"] = "Time",
+                                        ["value"] = timestamp,
+                                        ["inline"] = true
+                                    }
+                                },
+                                ["footer"] = {
+                                    ["text"] = "Nebula UI - Bug Report System"
+                                }
+                            }}
+                        }
+                        
+                        pcall(function()
+                            request({
+                                Url = webhookURL,
+                                Method = "POST",
+                                Headers = {
+                                    ["Content-Type"] = "application/json"
+                                },
+                                Body = HttpService:JSONEncode(data)
+                            })
+                            
+                            Window:Notification({
+                                Title = "Success",
+                                Text = "Bug report sent!",
+                                Duration = 3
+                            })
+                            
+                            bugReportText = ""
+                        end)
                     end
                 })
             end)
