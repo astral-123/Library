@@ -1,5 +1,4 @@
 -- By Astral
--- A
 
 local NebulaUI = {}
 local TweenService = game:GetService("TweenService")
@@ -476,18 +475,45 @@ function NebulaUI:CreateWindow(config)
     if Resizable then
         local ResizeHandle = Instance.new("Frame")
         ResizeHandle.Name = "ResizeHandle"
-        ResizeHandle.Size = UDim2.new(0, 15, 0, 15)
-        ResizeHandle.Position = UDim2.new(1, -15, 1, -15)
-        ResizeHandle.BackgroundColor3 = Theme.Primary
-        ResizeHandle.BackgroundTransparency = 0.5
+        ResizeHandle.Size = UDim2.new(0, 20, 0, 20)
+        ResizeHandle.Position = UDim2.new(1, -20, 1, -20)
+        ResizeHandle.BackgroundTransparency = 1
         ResizeHandle.BorderSizePixel = 0
         ResizeHandle.Parent = MainFrame
         
-        table.insert(GUIElements, {Type = "Primary", Instance = ResizeHandle})
+        -- Créer les triangles pour faire un coin
+        local Triangle1 = Instance.new("Frame")
+        Triangle1.Size = UDim2.new(0, 15, 0, 3)
+        Triangle1.Position = UDim2.new(1, -15, 1, -15)
+        Triangle1.BackgroundColor3 = Theme.Primary
+        Triangle1.BackgroundTransparency = 0.3
+        Triangle1.BorderSizePixel = 0
+        Triangle1.Rotation = 45
+        Triangle1.Parent = MainFrame
         
-        local ResizeCorner = Instance.new("UICorner")
-        ResizeCorner.CornerRadius = UDim.new(0, 3)
-        ResizeCorner.Parent = ResizeHandle
+        table.insert(GUIElements, {Type = "Primary", Instance = Triangle1})
+        
+        local Triangle2 = Instance.new("Frame")
+        Triangle2.Size = UDim2.new(0, 10, 0, 3)
+        Triangle2.Position = UDim2.new(1, -10, 1, -10)
+        Triangle2.BackgroundColor3 = Theme.Primary
+        Triangle2.BackgroundTransparency = 0.3
+        Triangle2.BorderSizePixel = 0
+        Triangle2.Rotation = 45
+        Triangle2.Parent = MainFrame
+        
+        table.insert(GUIElements, {Type = "Primary", Instance = Triangle2})
+        
+        local Triangle3 = Instance.new("Frame")
+        Triangle3.Size = UDim2.new(0, 5, 0, 3)
+        Triangle3.Position = UDim2.new(1, -5, 1, -5)
+        Triangle3.BackgroundColor3 = Theme.Primary
+        Triangle3.BackgroundTransparency = 0.3
+        Triangle3.BorderSizePixel = 0
+        Triangle3.Rotation = 45
+        Triangle3.Parent = MainFrame
+        
+        table.insert(GUIElements, {Type = "Primary", Instance = Triangle3})
         
         local resizing = false
         local resizeStart, sizeStart
