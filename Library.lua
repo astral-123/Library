@@ -1,5 +1,4 @@
 -- By Astral
--- a
 
 local NebulaUI = {}
 local TweenService = game:GetService("TweenService")
@@ -799,6 +798,115 @@ function NebulaUI:CreateWindow(config)
                             Text = "Applied " .. themeName .. " theme!",
                             Duration = 2
                         })
+                    end
+                })
+                
+                -- Background Image System
+                local SettingsRight = Tab:AddSection("Background Image", "right")
+                
+                local backgroundImageId = ""
+                
+                SettingsRight:AddInput({
+                    Name = "Image ID/Link",
+                    PlaceholderText = "rbxassetid://123456789",
+                    Flag = "BackgroundImageID",
+                    Callback = function(text)
+                        backgroundImageId = text
+                    end
+                })
+                
+                SettingsRight:AddButton({
+                    Name = "Load Background",
+                    Callback = function()
+                        if backgroundImageId == "" then
+                            Window:Notification({
+                                Title = "Error",
+                                Text = "Please enter an image ID!",
+                                Duration = 3
+                            })
+                            return
+                        end
+                        
+                        -- Nettoyer l'ID si c'est un lien complet
+                        local imageId = backgroundImageId
+                        if string.find(imageId, "rbxassetid://") then
+                            -- Déjà au bon format
+                        elseif string.find(imageId, "roblox.com") then
+                            -- Extraire l'ID d'un lien
+                            imageId = string.match(imageId, "(%d+)")
+                            if imageId then
+                                imageId = "rbxassetid://" .. imageId
+                            end
+                        elseif tonumber(imageId) then
+                            -- Juste un nombre
+                            imageId = "rbxassetid://" .. imageId
+                        end
+                        
+                        -- Vérifier si l'image de fond existe déjà
+                        local existingBg = MainFrame:FindFirstChild("CustomBackground")
+                        if existingBg then
+                            existingBg:Destroy()
+                        end
+                        
+                        -- Créer l'image de fond
+                        local BackgroundImage = Instance.new("ImageLabel")
+                        BackgroundImage.Name = "CustomBackground"
+                        BackgroundImage.Size = UDim2.new(1, 0, 1, 0)
+                        BackgroundImage.Position = UDim2.new(0, 0, 0, 0)
+                        BackgroundImage.BackgroundTransparency = 1
+                        BackgroundImage.Image = imageId
+                        BackgroundImage.ImageTransparency = 0.7
+                        BackgroundImage.ScaleType = Enum.ScaleType.Crop
+                        BackgroundImage.ZIndex = 0
+                        BackgroundImage.Parent = MainFrame
+                        
+                        -- S'assurer que le corner est appliqué
+                        local BgCorner = Instance.new("UICorner")
+                        BgCorner.CornerRadius = UDim.new(0, 4)
+                        BgCorner.Parent = BackgroundImage
+                        
+                        Window:Notification({
+                            Title = "Success",
+                            Text = "Background image loaded!",
+                            Duration = 3
+                        })
+                    end
+                })
+                
+                SettingsRight:AddSlider({
+                    Name = "Image Transparency",
+                    Min = 0,
+                    Max = 100,
+                    Default = 70,
+                    Flag = "BackgroundTransparency",
+                    Callback = function(value)
+                        local existingBg = MainFrame:FindFirstChild("CustomBackground")
+                        if existingBg then
+                            existingBg.ImageTransparency = value / 100
+                        end
+                    end
+                })
+                
+                SettingsRight:AddButton({
+                    Name = "Remove Background",
+                    Callback = function()
+                        local existingBg = MainFrame:FindFirstChild("CustomBackground")
+                        if existingBg then
+                            Tween(existingBg, {ImageTransparency = 1}, 0.3)
+                            task.wait(0.3)
+                            existingBg:Destroy()
+                            Window:Notification({
+                                Title = "Removed",
+                                Text = "Background image removed!",
+                                Duration = 2
+                            })
+                        else
+                            Window:Notification({
+                                Title = "Error",
+                                Text = "No background to remove!",
+                                Duration = 2
+                            })
+                        end
                     end
                 })
             end)
