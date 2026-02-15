@@ -1,5 +1,4 @@
 -- By Astral
--- G
 
 local NebulaUI = {}
 local TweenService = game:GetService("TweenService")
@@ -860,8 +859,11 @@ function NebulaUI:CreateWindow(config)
                 })
                 
                 local SettingsRight = Tab:AddSection("Config System", "right")
+                
+-- Trouvez cette section dans votre code (vers la ligne 800-900) où le Settings Tab est créé
+-- Ajoutez ce code après la section "Config System" dans le SettingsRight :
 
-                -- Dans la fonction qui crée le Settings tab, ajoutez cette section :
+-- Dans la fonction qui crée le Settings tab, ajoutez cette section :
 
 local SettingsBackground = Tab:AddSection("Background Image", "right")
 
@@ -970,103 +972,6 @@ SettingsBackground:AddButton({
         end
     end
 })
-                
- -- REMPLACEZ les fonctions SaveConfig et LoadConfig existantes par ces versions améliorées :
-
-function Window:SaveConfig(configName)
-    configName = configName or "DefaultConfig"
-    
-    local configData = {}
-    
-    -- Sauvegarder tous les flags (toggles, sliders, inputs, etc.)
-    for flag, obj in pairs(ConfigSystem.Flags) do
-        configData[flag] = obj.Value
-    end
-    
-    -- Sauvegarder l'image de fond
-    local existingBg = MainFrame:FindFirstChild("CustomBackground")
-    if existingBg then
-        configData["__BackgroundImage"] = existingBg.Image
-        configData["__BackgroundTransparency"] = existingBg.ImageTransparency
-    end
-    
-    local json = HttpService:JSONEncode(configData)
-    
-    if writefile then
-        writefile("NebulaHub_" .. configName .. ".json", json)
-        Window:Notification({
-            Title = "Config Saved",
-            Text = "'" .. configName .. "' saved successfully!",
-            Duration = 3
-        })
-        return true
-    else
-        Window:Notification({
-            Title = "Error",
-            Text = "writefile not supported!",
-            Duration = 3
-        })
-        return false
-    end
-end
-
-function Window:LoadConfig(configName)
-    configName = configName or "DefaultConfig"
-    
-    if readfile and isfile and isfile("NebulaHub_" .. configName .. ".json") then
-        local success, configData = pcall(function()
-            return HttpService:JSONDecode(readfile("NebulaHub_" .. configName .. ".json"))
-        end)
-        
-        if success then
-            -- Charger tous les flags
-            for flag, value in pairs(configData) do
-                if flag == "__BackgroundImage" then
-                    -- Charger l'image de fond
-                    local existingBg = MainFrame:FindFirstChild("CustomBackground")
-                    if existingBg then
-                        existingBg:Destroy()
-                    end
-                    
-                    local BackgroundImage = Instance.new("ImageLabel")
-                    BackgroundImage.Name = "CustomBackground"
-                    BackgroundImage.Size = UDim2.new(1, 0, 1, 0)
-                    BackgroundImage.Position = UDim2.new(0, 0, 0, 0)
-                    BackgroundImage.BackgroundTransparency = 1
-                    BackgroundImage.Image = value
-                    BackgroundImage.ImageTransparency = configData["__BackgroundTransparency"] or 0.7
-                    BackgroundImage.ScaleType = Enum.ScaleType.Crop
-                    BackgroundImage.ZIndex = 0
-                    BackgroundImage.Parent = MainFrame
-                    
-                    local BgCorner = Instance.new("UICorner")
-                    BgCorner.CornerRadius = UDim.new(0, 4)
-                    BgCorner.Parent = BackgroundImage
-                    
-                elseif flag ~= "__BackgroundTransparency" then
-                    -- Charger les autres flags normalement
-                    if ConfigSystem.Flags[flag] then
-                        ConfigSystem.Flags[flag]:Set(value)
-                    end
-                end
-            end
-            
-            Window:Notification({
-                Title = "Config Loaded",
-                Text = "'" .. configName .. "' loaded successfully!",
-                Duration = 3
-            })
-            return true
-        end
-    else
-        Window:Notification({
-            Title = "Error",
-            Text = "Config '" .. configName .. "' not found!",
-            Duration = 3
-        })
-    end
-    return false
-end
         
         function Tab:AddSection(sectionName, column)
             column = column or "left"
