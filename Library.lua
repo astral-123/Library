@@ -1,4 +1,5 @@
 -- By Astral
+-- A
 
 local NebulaUI = {}
 local TweenService = game:GetService("TweenService")
@@ -614,6 +615,120 @@ function NebulaUI:CreateWindow(config)
         end)
     end
     
+    function Window:SaveConfig(configName)
+        configName = configName or "DefaultConfig"
+        
+        local configData = {}
+        
+        -- Sauvegarder tous les flags (toggles, sliders, inputs, etc.)
+        for flag, obj in pairs(ConfigSystem.Flags) do
+            configData[flag] = obj.Value
+        end
+        
+        -- Sauvegarder l'image de fond
+        local existingBg = MainFrame:FindFirstChild("CustomBackground")
+        if existingBg then
+            configData["__BackgroundImage"] = existingBg.Image
+            configData["__BackgroundTransparency"] = existingBg.ImageTransparency
+        end
+        
+        local json = HttpService:JSONEncode(configData)
+        
+        if writefile then
+            writefile("NebulaHub_" .. configName .. ".json", json)
+            Window:Notification({
+                Title = "Config Saved",
+                Text = "'" .. configName .. "' saved successfully!",
+                Duration = 3
+            })
+            return true
+        else
+            Window:Notification({
+                Title = "Error",
+                Text = "writefile not supported!",
+                Duration = 3
+            })
+            return false
+        end
+    end
+    
+    function Window:LoadConfig(configName)
+        configName = configName or "DefaultConfig"
+        
+        if readfile and isfile and isfile("NebulaHub_" .. configName .. ".json") then
+            local success, configData = pcall(function()
+                return HttpService:JSONDecode(readfile("NebulaHub_" .. configName .. ".json"))
+            end)
+            
+            if success then
+                -- Charger tous les flags
+                for flag, value in pairs(configData) do
+                    if flag == "__BackgroundImage" then
+                        -- Charger l'image de fond
+                        local existingBg = MainFrame:FindFirstChild("CustomBackground")
+                        if existingBg then
+                            existingBg:Destroy()
+                        end
+                        
+                        local BackgroundImage = Instance.new("ImageLabel")
+                        BackgroundImage.Name = "CustomBackground"
+                        BackgroundImage.Size = UDim2.new(1, 0, 1, 0)
+                        BackgroundImage.Position = UDim2.new(0, 0, 0, 0)
+                        BackgroundImage.BackgroundTransparency = 1
+                        BackgroundImage.Image = value
+                        BackgroundImage.ImageTransparency = configData["__BackgroundTransparency"] or 0.7
+                        BackgroundImage.ScaleType = Enum.ScaleType.Crop
+                        BackgroundImage.ZIndex = 0
+                        BackgroundImage.Parent = MainFrame
+                        
+                        local BgCorner = Instance.new("UICorner")
+                        BgCorner.CornerRadius = UDim.new(0, 4)
+                        BgCorner.Parent = BackgroundImage
+                        
+                    elseif flag ~= "__BackgroundTransparency" then
+                        -- Charger les autres flags normalement
+                        if ConfigSystem.Flags[flag] then
+                            ConfigSystem.Flags[flag]:Set(value)
+                        end
+                    end
+                end
+                
+                Window:Notification({
+                    Title = "Config Loaded",
+                    Text = "'" .. configName .. "' loaded successfully!",
+                    Duration = 3
+                })
+                return true
+            end
+        else
+            Window:Notification({
+                Title = "Error",
+                Text = "Config '" .. configName .. "' not found!",
+                Duration = 3
+            })
+        end
+        return false
+    end
+    
+    function Window:GetConfigList()
+        local configs = {}
+        
+        if listfiles then
+            for _, file in ipairs(listfiles()) do
+                local configName = file:match("NebulaHub_(.+)%.json")
+                if configName then
+                    table.insert(configs, configName)
+                end
+            end
+        end
+        
+        if #configs == 0 then
+            table.insert(configs, "None")
+        end
+        
+        return configs
+    end
+    
     function Window:CreateTab(tabName)
         local isSettings = (tabName == "Settings")
         
@@ -905,6 +1020,88 @@ function NebulaUI:CreateWindow(config)
                                 Title = "Error",
                                 Text = "No background to remove!",
                                 Duration = 2
+                            })
+                        end
+                    end
+                })
+                
+                -- Config System
+                local ConfigSection = Tab:AddSection("Config System", "right")
+                
+                local configNameInput = ""
+                local selectedConfig = "None"
+                
+                ConfigSection:AddInput({
+                    Name = "Config Name",
+                    PlaceholderText = "MyConfig",
+                    Callback = function(text)
+                        configNameInput = text
+                    end
+                })
+                
+                ConfigSection:AddDropdown({
+                    Name = "Select Config",
+                    Options = Window:GetConfigList(),
+                    Default = "None",
+                    Callback = function(value)
+                        selectedConfig = value
+                    end
+                })
+                
+                ConfigSection:AddButton({
+                    Name = "Save Config",
+                    Callback = function()
+                        if configNameInput ~= "" then
+                            Window:SaveConfig(configNameInput)
+                        else
+                            Window:Notification({
+                                Title = "Error",
+                                Text = "Enter a config name!",
+                                Duration = 3
+                            })
+                        end
+                    end
+                })
+                
+                ConfigSection:AddButton({
+                    Name = "Load Config",
+                    Callback = function()
+                        if selectedConfig ~= "None" then
+                            Window:LoadConfig(selectedConfig)
+                        else
+                            Window:Notification({
+                                Title = "Error",
+                                Text = "Select a config!",
+                                Duration = 3
+                            })
+                        end
+                    end
+                })
+                
+                ConfigSection:AddButton({
+                    Name = "Delete Config",
+                    Callback = function()
+                        if selectedConfig ~= "None" then
+                            if delfile then
+                                delfile("NebulaHub_" .. selectedConfig .. ".json")
+                                Window:Notification({
+                                    Title = "Deleted",
+                                    Text = "Config '" .. selectedConfig .. "' deleted!",
+                                    Duration = 3
+                                })
+                                selectedConfig = "None"
+                            else
+                                Window:Notification({
+                                    Title = "Error",
+                                    Text = "delfile not supported!",
+                                    Duration = 3
+                                })
+                            end
+                        else
+                            Window:Notification({
+                                Title = "Error",
+                                Text = "Select a config!",
+                                Duration = 3
                             })
                         end
                     end
