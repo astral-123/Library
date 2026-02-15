@@ -1,5 +1,4 @@
 -- By Astral
--- A
 
 local NebulaUI = {}
 local TweenService = game:GetService("TweenService")
@@ -482,18 +481,171 @@ function NebulaUI:CreateWindow(config)
         ResizeHandle.BorderSizePixel = 0
         ResizeHandle.Parent = MainFrame
         
-        -- Créer un vrai triangle avec ImageLabel
-        local TriangleImage = Instance.new("ImageLabel")
-        TriangleImage.Size = UDim2.new(0, 20, 0, 20)
-        TriangleImage.Position = UDim2.new(1, -20, 1, -20)
-        TriangleImage.BackgroundTransparency = 1
-        TriangleImage.Image = "rbxassetid://6031094678" -- Triangle pointant vers le coin
-        TriangleImage.ImageColor3 = Theme.Primary
-        TriangleImage.ImageTransparency = 0.3
-        TriangleImage.Rotation = 0
-        TriangleImage.Parent = MainFrame
+        -- Container pour les différents styles
+        local ResizeContainer = Instance.new("Frame")
+        ResizeContainer.Name = "ResizeContainer"
+        ResizeContainer.Size = UDim2.new(0, 20, 0, 20)
+        ResizeContainer.Position = UDim2.new(1, -20, 1, -20)
+        ResizeContainer.BackgroundTransparency = 1
+        ResizeContainer.Parent = MainFrame
         
-        table.insert(GUIElements, {Type = "Primary", Instance = TriangleImage})
+        -- Fonction pour créer les différents styles
+        local function CreateResizeStyle(style)
+            -- Nettoyer les anciens éléments
+            for _, child in pairs(ResizeContainer:GetChildren()) do
+                child:Destroy()
+            end
+            
+            if style == "Triangle" then
+                local TriangleImage = Instance.new("ImageLabel")
+                TriangleImage.Size = UDim2.new(1, 0, 1, 0)
+                TriangleImage.BackgroundTransparency = 1
+                TriangleImage.Image = "rbxassetid://6031094678"
+                TriangleImage.ImageColor3 = Theme.Primary
+                TriangleImage.ImageTransparency = 0.3
+                TriangleImage.Parent = ResizeContainer
+                table.insert(GUIElements, {Type = "Primary", Instance = TriangleImage})
+                
+            elseif style == "3 Points" then
+                -- Point 1 (coin)
+                local Point1 = Instance.new("Frame")
+                Point1.Size = UDim2.new(0, 4, 0, 4)
+                Point1.Position = UDim2.new(1, -4, 1, -4)
+                Point1.BackgroundColor3 = Theme.Primary
+                Point1.BorderSizePixel = 0
+                Point1.Parent = ResizeContainer
+                local Corner1 = Instance.new("UICorner")
+                Corner1.CornerRadius = UDim.new(1, 0)
+                Corner1.Parent = Point1
+                table.insert(GUIElements, {Type = "Primary", Instance = Point1})
+                
+                -- Point 2 (milieu horizontal)
+                local Point2 = Instance.new("Frame")
+                Point2.Size = UDim2.new(0, 4, 0, 4)
+                Point2.Position = UDim2.new(1, -12, 1, -4)
+                Point2.BackgroundColor3 = Theme.Primary
+                Point2.BorderSizePixel = 0
+                Point2.Parent = ResizeContainer
+                local Corner2 = Instance.new("UICorner")
+                Corner2.CornerRadius = UDim.new(1, 0)
+                Corner2.Parent = Point2
+                table.insert(GUIElements, {Type = "Primary", Instance = Point2})
+                
+                -- Point 3 (milieu vertical)
+                local Point3 = Instance.new("Frame")
+                Point3.Size = UDim2.new(0, 4, 0, 4)
+                Point3.Position = UDim2.new(1, -4, 1, -12)
+                Point3.BackgroundColor3 = Theme.Primary
+                Point3.BorderSizePixel = 0
+                Point3.Parent = ResizeContainer
+                local Corner3 = Instance.new("UICorner")
+                Corner3.CornerRadius = UDim.new(1, 0)
+                Corner3.Parent = Point3
+                table.insert(GUIElements, {Type = "Primary", Instance = Point3})
+                
+            elseif style == "Lines" then
+                -- 3 lignes diagonales
+                for i = 1, 3 do
+                    local Line = Instance.new("Frame")
+                    Line.Size = UDim2.new(0, 2, 0, (i * 4) + 4)
+                    Line.Position = UDim2.new(1, -(i * 5), 1, -(i * 5))
+                    Line.BackgroundColor3 = Theme.Primary
+                    Line.BorderSizePixel = 0
+                    Line.Rotation = 45
+                    Line.Parent = ResizeContainer
+                    table.insert(GUIElements, {Type = "Primary", Instance = Line})
+                end
+                
+            elseif style == "Dots Grid" then
+                -- Grille de 3x3 points
+                for x = 0, 2 do
+                    for y = 0, 2 do
+                        local Dot = Instance.new("Frame")
+                        Dot.Size = UDim2.new(0, 3, 0, 3)
+                        Dot.Position = UDim2.new(1, -18 + (x * 6), 1, -18 + (y * 6))
+                        Dot.BackgroundColor3 = Theme.Primary
+                        Dot.BorderSizePixel = 0
+                        Dot.Parent = ResizeContainer
+                        local DotCorner = Instance.new("UICorner")
+                        DotCorner.CornerRadius = UDim.new(1, 0)
+                        DotCorner.Parent = Dot
+                        table.insert(GUIElements, {Type = "Primary", Instance = Dot})
+                    end
+                end
+                
+            elseif style == "Corner" then
+                -- L shape dans le coin
+                local Horizontal = Instance.new("Frame")
+                Horizontal.Size = UDim2.new(0, 15, 0, 3)
+                Horizontal.Position = UDim2.new(1, -15, 1, -3)
+                Horizontal.BackgroundColor3 = Theme.Primary
+                Horizontal.BorderSizePixel = 0
+                Horizontal.Parent = ResizeContainer
+                table.insert(GUIElements, {Type = "Primary", Instance = Horizontal})
+                
+                local Vertical = Instance.new("Frame")
+                Vertical.Size = UDim2.new(0, 3, 0, 15)
+                Vertical.Position = UDim2.new(1, -3, 1, -15)
+                Vertical.BackgroundColor3 = Theme.Primary
+                Vertical.BorderSizePixel = 0
+                Vertical.Parent = ResizeContainer
+                table.insert(GUIElements, {Type = "Primary", Instance = Vertical})
+                
+            elseif style == "Square" then
+                local Square = Instance.new("Frame")
+                Square.Size = UDim2.new(0, 12, 0, 12)
+                Square.Position = UDim2.new(1, -14, 1, -14)
+                Square.BackgroundColor3 = Theme.Primary
+                Square.BackgroundTransparency = 0.3
+                Square.BorderSizePixel = 0
+                Square.Parent = ResizeContainer
+                local SquareCorner = Instance.new("UICorner")
+                SquareCorner.CornerRadius = UDim.new(0, 3)
+                SquareCorner.Parent = Square
+                table.insert(GUIElements, {Type = "Primary", Instance = Square})
+                
+            elseif style == "Arrow" then
+                -- Flèche double
+                local Arrow1 = Instance.new("ImageLabel")
+                Arrow1.Size = UDim2.new(0, 16, 0, 16)
+                Arrow1.Position = UDim2.new(1, -18, 1, -18)
+                Arrow1.BackgroundTransparency = 1
+                Arrow1.Image = "rbxassetid://6031097225"
+                Arrow1.ImageColor3 = Theme.Primary
+                Arrow1.Rotation = 45
+                Arrow1.Parent = ResizeContainer
+                table.insert(GUIElements, {Type = "Primary", Instance = Arrow1})
+            end
+            
+            -- Animation au hover
+            for _, child in pairs(ResizeContainer:GetChildren()) do
+                if child:IsA("GuiObject") then
+                    ResizeHandle.MouseEnter:Connect(function()
+                        if child:IsA("ImageLabel") then
+                            Tween(child, {ImageTransparency = 0.1}, 0.15)
+                        else
+                            Tween(child, {BackgroundTransparency = 0.1}, 0.15)
+                        end
+                    end)
+                    
+                    ResizeHandle.MouseLeave:Connect(function()
+                        if not resizing then
+                            if child:IsA("ImageLabel") then
+                                Tween(child, {ImageTransparency = 0.3}, 0.15)
+                            else
+                                Tween(child, {BackgroundTransparency = 0.3}, 0.15)
+                            end
+                        end
+                    end)
+                end
+            end
+        end
+        
+        -- Style par défaut
+        CreateResizeStyle("Triangle")
+        
+        -- Stocker la fonction pour l'utiliser depuis Settings
+        Window.ChangeResizeStyle = CreateResizeStyle
         
         local resizing = false
         local resizeStart, sizeStart
@@ -503,24 +655,12 @@ function NebulaUI:CreateWindow(config)
                 resizing = true
                 resizeStart = input.Position
                 sizeStart = MainFrame.AbsoluteSize
-                Tween(TriangleImage, {ImageTransparency = 0.1}, 0.2)
             end
         end)
         
         ResizeHandle.InputEnded:Connect(function(input)
             if input.UserInputType == Enum.UserInputType.MouseButton1 then
                 resizing = false
-                Tween(TriangleImage, {ImageTransparency = 0.3}, 0.2)
-            end
-        end)
-        
-        ResizeHandle.MouseEnter:Connect(function()
-            Tween(TriangleImage, {ImageTransparency = 0.1}, 0.15)
-        end)
-        
-        ResizeHandle.MouseLeave:Connect(function()
-            if not resizing then
-                Tween(TriangleImage, {ImageTransparency = 0.3}, 0.15)
             end
         end)
         
@@ -817,6 +957,23 @@ function NebulaUI:CreateWindow(config)
                             Text = "Applied " .. themeName .. " theme!",
                             Duration = 2
                         })
+                    end
+                })
+                
+                SettingsLeft:AddDropdown({
+                    Name = "Resize Handle Style",
+                    Options = {"Triangle", "3 Points", "Lines", "Dots Grid", "Corner", "Square", "Arrow"},
+                    Default = "Triangle",
+                    Flag = "ResizeStyle",
+                    Callback = function(style)
+                        if Window.ChangeResizeStyle then
+                            Window.ChangeResizeStyle(style)
+                            Window:Notification({
+                                Title = "Style Changed",
+                                Text = "Resize handle: " .. style,
+                                Duration = 2
+                            })
+                        end
                     end
                 })
                 
