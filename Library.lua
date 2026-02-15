@@ -1,5 +1,4 @@
 -- By Astral
--- a
 
 local NebulaUI = {}
 local TweenService = game:GetService("TweenService")
@@ -542,7 +541,7 @@ function NebulaUI:CreateWindow(config)
         CurrentTab = nil,
         ToggleKey = currentToggleKey,
         GUIElements = GUIElements,
-        HasParametreTab = false
+        HasSettingsTab = false
     }
     
     function Window:Notification(config)
@@ -616,19 +615,19 @@ function NebulaUI:CreateWindow(config)
     end
     
     function Window:CreateTab(tabName)
-        local isParametre = (tabName == "Paramètre")
+        local isSettings = (tabName == "Settings")
         
-        if isParametre and Window.HasParametreTab then
-            return Window.ParametreTabObj
+        if isSettings and Window.HasSettingsTab then
+            return Window.SettingsTabObj
         end
         
-        if isParametre then
-            Window.HasParametreTab = true
+        if isSettings then
+            Window.HasSettingsTab = true
         end
         
         local Tab = {
             Name = tabName,
-            IsParametre = isParametre
+            IsSettings = isSettings
         }
         
         local TabButton = Instance.new("TextButton")
@@ -638,7 +637,7 @@ function NebulaUI:CreateWindow(config)
         TabButton.BackgroundTransparency = 1
         TabButton.BorderSizePixel = 0
         TabButton.Text = ""
-        TabButton.LayoutOrder = isParametre and 9999 or #Window.Tabs
+        TabButton.LayoutOrder = isSettings and 9999 or #Window.Tabs
         TabButton.Parent = TabList
         
         table.insert(GUIElements, {Type = "Element", Instance = TabButton})
@@ -658,9 +657,9 @@ function NebulaUI:CreateWindow(config)
         TabLabel.Size = UDim2.new(1, -10, 1, 0)
         TabLabel.Position = UDim2.new(0, 10, 0, 0)
         TabLabel.BackgroundTransparency = 1
-        TabLabel.Text = isParametre and "⚙️" or tabName
+        TabLabel.Text = isSettings and "⚙️" or tabName
         TabLabel.TextColor3 = Theme.TextDark
-        TabLabel.TextSize = isParametre and 16 or 12
+        TabLabel.TextSize = isSettings and 16 or 12
         TabLabel.Font = Enum.Font.Gotham
         TabLabel.TextXAlignment = Enum.TextXAlignment.Left
         TabLabel.Parent = TabButton
@@ -764,13 +763,13 @@ function NebulaUI:CreateWindow(config)
             Window.CurrentTab = Tab
         end
         
-        if isParametre then
-            Window.ParametreTabObj = Tab
+        if isSettings then
+            Window.SettingsTabObj = Tab
             
             task.defer(function()
-                local ParametreLeft = Tab:AddSection("Paramètres UI", "left")
+                local SettingsLeft = Tab:AddSection("UI Settings", "left")
                 
-                ParametreLeft:AddKeybind({
+                SettingsLeft:AddKeybind({
                     Name = "Toggle UI",
                     Default = currentToggleKey,
                     Flag = "ToggleKey",
@@ -787,28 +786,28 @@ function NebulaUI:CreateWindow(config)
                 end
                 table.sort(themeNames)
                 
-                ParametreLeft:AddDropdown({
-                    Name = "Thème",
+                SettingsLeft:AddDropdown({
+                    Name = "Theme",
                     Options = themeNames,
                     Default = "Default",
                     Flag = "Theme",
                     Callback = function(themeName)
                         ApplyTheme(themeName, Window.GUIElements)
                         Window:Notification({
-                            Title = "Thème Changé",
-                            Text = "Thème " .. themeName .. " appliqué!",
+                            Title = "Theme Changed",
+                            Text = "Applied " .. themeName .. " theme!",
                             Duration = 2
                         })
                     end
                 })
                 
                 -- Background Image System
-                local ParametreRight = Tab:AddSection("Image d'Arrière-plan", "right")
+                local SettingsRight = Tab:AddSection("Background Image", "right")
                 
                 local backgroundImageId = ""
                 
-                ParametreRight:AddInput({
-                    Name = "ID/Lien Image",
+                SettingsRight:AddInput({
+                    Name = "Image ID/Link",
                     PlaceholderText = "rbxassetid://123456789",
                     Flag = "BackgroundImageID",
                     Callback = function(text)
@@ -816,13 +815,13 @@ function NebulaUI:CreateWindow(config)
                     end
                 })
                 
-                ParametreRight:AddButton({
-                    Name = "Charger l'Arrière-plan",
+                SettingsRight:AddButton({
+                    Name = "Load Background",
                     Callback = function()
                         if backgroundImageId == "" then
                             Window:Notification({
-                                Title = "Erreur",
-                                Text = "Veuillez entrer un ID d'image!",
+                                Title = "Error",
+                                Text = "Please enter an image ID!",
                                 Duration = 3
                             })
                             return
@@ -867,15 +866,15 @@ function NebulaUI:CreateWindow(config)
                         BgCorner.Parent = BackgroundImage
                         
                         Window:Notification({
-                            Title = "Succès",
-                            Text = "Image d'arrière-plan chargée!",
+                            Title = "Success",
+                            Text = "Background image loaded!",
                             Duration = 3
                         })
                     end
                 })
                 
-                ParametreRight:AddSlider({
-                    Name = "Transparence Image",
+                SettingsRight:AddSlider({
+                    Name = "Image Transparency",
                     Min = 0,
                     Max = 100,
                     Default = 70,
@@ -888,8 +887,8 @@ function NebulaUI:CreateWindow(config)
                     end
                 })
                 
-                ParametreRight:AddButton({
-                    Name = "Supprimer l'Arrière-plan",
+                SettingsRight:AddButton({
+                    Name = "Remove Background",
                     Callback = function()
                         local existingBg = MainFrame:FindFirstChild("CustomBackground")
                         if existingBg then
@@ -897,14 +896,14 @@ function NebulaUI:CreateWindow(config)
                             task.wait(0.3)
                             existingBg:Destroy()
                             Window:Notification({
-                                Title = "Supprimé",
-                                Text = "Image d'arrière-plan supprimée!",
+                                Title = "Removed",
+                                Text = "Background image removed!",
                                 Duration = 2
                             })
                         else
                             Window:Notification({
-                                Title = "Erreur",
-                                Text = "Aucun arrière-plan à supprimer!",
+                                Title = "Error",
+                                Text = "No background to remove!",
                                 Duration = 2
                             })
                         end
@@ -1548,4 +1547,5 @@ function NebulaUI:CreateWindow(config)
     
     return Window
 end
+
 return NebulaUI
