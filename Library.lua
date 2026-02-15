@@ -1547,5 +1547,4 @@ function NebulaUI:CreateWindow(config)
     
     return Window
 end
-
 return NebulaUI
