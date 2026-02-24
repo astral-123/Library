@@ -1,4 +1,4 @@
-By Astrall
+By astral
 local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
 
 -- ═══════════════════════════════════════════
@@ -69,14 +69,17 @@ local randomParts = {
 -- ═══════════════════════════════════════════
 -- FOV CIRCLE
 -- ═══════════════════════════════════════════
-local FOVCircle = Drawing.new("Circle")
-FOVCircle.Thickness    = 2
-FOVCircle.NumSides     = 50
-FOVCircle.Radius       = settings.aimAssistFOV
-FOVCircle.Filled       = false
-FOVCircle.Color        = Color3.fromRGB(180, 80, 255)
-FOVCircle.Visible      = false
-FOVCircle.Transparency = 1
+local FOVCircle = nil
+pcall(function()
+    FOVCircle = Drawing.new("Circle")
+    FOVCircle.Thickness    = 2
+    FOVCircle.NumSides     = 50
+    FOVCircle.Radius       = settings.aimAssistFOV
+    FOVCircle.Filled       = false
+    FOVCircle.Color        = Color3.fromRGB(180, 80, 255)
+    FOVCircle.Visible      = false
+    FOVCircle.Transparency = 1
+end)
 
 -- ═══════════════════════════════════════════
 -- HELPERS
@@ -84,10 +87,14 @@ FOVCircle.Transparency = 1
 local function isVisible(targetPart)
     if not targetPart then return false end
     local origin    = camera.CFrame.Position
-    local direction = (targetPart.Position - origin).Unit * (targetPart.Position - origin).Magnitude
-    local ray       = Ray.new(origin, direction)
-    local hit       = Workspace:FindPartOnRayWithIgnoreList(ray, {localPlayer.Character, camera})
-    if hit then return hit:IsDescendantOf(targetPart.Parent) end
+    local direction = (targetPart.Position - origin)
+    local rayParams = RaycastParams.new()
+    rayParams.FilterType = Enum.RaycastFilterType.Exclude
+    rayParams.FilterDescendantsInstances = {localPlayer.Character or {}}
+    local result = Workspace:Raycast(origin, direction, rayParams)
+    if result then
+        return result.Instance and result.Instance:IsDescendantOf(targetPart.Parent)
+    end
     return false
 end
 
@@ -472,7 +479,7 @@ TabAim:CreateToggle({
     Name = "Aim Assist", CurrentValue = false, Flag = "AimAssist",
     Callback = function(v)
         toggles.aimAssist = v
-        FOVCircle.Visible = v
+        if FOVCircle then FOVCircle.Visible = v end
     end
 })
 
@@ -503,7 +510,7 @@ TabAim:CreateSlider({
     CurrentValue = 100, Flag = "FOVSize",
     Callback = function(v)
         settings.aimAssistFOV = v
-        FOVCircle.Radius = v
+        if FOVCircle then FOVCircle.Radius = v end
     end
 })
 
@@ -623,14 +630,16 @@ end)
 RunService.RenderStepped:Connect(function()
     if toggles.aimAssist then
         local mp = UserInputService:GetMouseLocation()
-        FOVCircle.Position = mp
-        FOVCircle.Visible  = true
+        if FOVCircle then
+            FOVCircle.Position = mp
+            FOVCircle.Visible  = true
+        end
         if UserInputService:IsMouseButtonPressed(Enum.UserInputType.MouseButton2) then
             local target = getClosestPlayerToCursor()
             if target then aimAtWithMouse(target) end
         end
     else
-        FOVCircle.Visible = false
+        if FOVCircle then FOVCircle.Visible = false end
     end
     if toggles.triggerBot then runTriggerBot() end
     updateESP()
